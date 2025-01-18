@@ -5,12 +5,14 @@ import {
   success,
   TryCatch,
   getDataUri,
+  cookieOptions,
 } from "../utils/features.js";
 import bcrypt from "bcryptjs";
+import { v2 as cloudinary } from "cloudinary";
 
 export const register = TryCatch(async (req, res, next) => {
-  const { name, email, password } = req.body;
-  if (!name || !email || !password) {
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
     return next(new ErrorHandler("All required fields must be provided", 400));
   }
 
@@ -22,7 +24,7 @@ export const register = TryCatch(async (req, res, next) => {
   const hashedPassword = await bcrypt.hash(password, 10);
 
   const user = await User.create({
-    name,
+    username,
     email,
     password: hashedPassword,
   });
@@ -35,7 +37,7 @@ export const login = TryCatch(async (req, res, next) => {
   const user = await User.findOne({ username }).select("+password");
   if (!user) return next(new ErrorHandler("Invalid Username or Password", 404));
 
-  const isMatch = await compare(password, user.password);
+  const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch)
     return next(new ErrorHandler("Invalid Username or Password", 404));
 
@@ -53,13 +55,13 @@ export const logout = TryCatch(async (req, res, next) => {
 });
 
 export const getProfile = TryCatch(async (req, res, next) => {
-  const userId = req.params.id;
-  const user = User.findById({userId});
-  return success(res, "Profile fetched successfully", 200, req.user);
+  const user = await User.findById(req.params.id).select("-password");
+  if (!user) return new ErrorHandler("User not Found", 404);
+  return success(res, "Profile fetched successfully", 200, user);
 });
 
 export const editProfile = TryCatch(async (req, res, next) => {
-  const userId = req.user.id;
+  const userId = req.user;
   const {bio, gender} = req.body;
   const profilePicture = req.file;
   let cloudResponse;
@@ -69,7 +71,7 @@ export const editProfile = TryCatch(async (req, res, next) => {
     cloudResponse = await cloudinary.uploader.upload(fileUri);
   }
 
-  const user = User.findById({userId});
+  const user = await User.findById(userId).select("-password");
   if(!user) return new ErrorHandler("User not Found", 404);
 
   if (bio) user.bio = bio;
@@ -82,13 +84,13 @@ export const editProfile = TryCatch(async (req, res, next) => {
 });
 
 export const getSuggestedUsers = TryCatch(async (req, res, next) => {
-  const suggestedUsers = User.find({ _id: {$ne: req.user.id} }).select("-password");
+  const suggestedUsers = await User.find({ _id: {$ne: req.user} }).select("-password");
   if (!suggestedUsers) return new ErrorHandler("Currently do not have any users", 404);
   return success(res, "Suggested Users fetched successfully", 200, suggestedUsers);
 });
 
 export const followOrUnfollow = TryCatch(async (req, res, next) => {
-  const loginUserId = req.user.id;
+  const loginUserId = req.user;
   const targetUserId = req.params.id;
   if(loginUserId === targetUserId) return new ErrorHandler("You cannot follow or unfollow yourself", 400);
   

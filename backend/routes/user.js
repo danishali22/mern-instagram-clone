@@ -19,7 +19,7 @@ app.get("/logout", logout);
 
 app.use(isAuthenticated);
 app.get("/:id/profile", getProfile);
-app.post("/profile/edit", upload.single("profilePhoto"), editProfile);
+app.post("/profile/edit", upload.single("profilePicture"), editProfile);
 app.get("/suggested", getSuggestedUsers);
 app.post("/followorunfollow/:id", followOrUnfollow);
 

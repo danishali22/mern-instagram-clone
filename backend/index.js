@@ -7,6 +7,8 @@ import { v2 as cloudinary } from "cloudinary";
 
 // routes
 import userRoutes from "./routes/user.js";
+import postRoutes from "./routes/post.js";
+import messageRoutes from "./routes/message.js";
 
 // Load environment variables
 dotenv.config({ path: "./.env" });
@@ -33,7 +35,9 @@ cloudinary.config({
   api_secret: process.env.CLOUD_API_SECRET,
 });
 
-app.use("/api/v1/user", userRoutes);
+app.use("/api/user", userRoutes);
+app.use("/api/post", postRoutes);
+app.use("/api/message", messageRoutes);
 
 app.get("/", (req, res) => {
   res.send("Home Route");
