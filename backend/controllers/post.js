@@ -134,7 +134,7 @@ export const deletePost = TryCatch(async (req, res, next) => {
 
     // delete all posts from user table
     const user = await User.findById(authorId);
-    user.posts = user.posts.filter((id) => id.toString !== postId);
+    user.posts = user.posts.filter((id) => id.toString() !== postId);
 
     // delete all comments of posts
     await Comment.deleteMany({post: postId});

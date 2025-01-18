@@ -1,3 +1,4 @@
+import { Post } from "../models/post.js";
 import { User } from "../models/user.js";
 import {
   ErrorHandler,
@@ -40,6 +41,20 @@ export const login = TryCatch(async (req, res, next) => {
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch)
     return next(new ErrorHandler("Invalid Username or Password", 404));
+
+  console.log("User Posts:", user.posts);
+
+  const populatedPost = await Promise.all(
+    user.posts.map(async(postId) => {
+      const post = await Post.findById(postId);
+      if(post.author.equals(user._id)){
+        return post;
+      }
+      return null;
+    })
+  );
+
+  user.posts = populatedPost;
 
   sendToken(res, user, 200, `Welcome back ${user.name}`);
 });
