@@ -1,12 +1,13 @@
 import { Post } from "../models/post.js";
 import { User } from "../models/user.js";
+import sharp from "sharp";
 import {
   ErrorHandler,
   sendToken,
   success,
   TryCatch,
-  getDataUri,
   cookieOptions,
+  uploadFilesToCloudinary,
 } from "../utils/features.js";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
@@ -42,8 +43,6 @@ export const login = TryCatch(async (req, res, next) => {
   if (!isMatch)
     return next(new ErrorHandler("Invalid Username or Password", 404));
 
-  console.log("User Posts:", user.posts);
-
   const populatedPost = await Promise.all(
     user.posts.map(async(postId) => {
       const post = await Post.findById(postId);
@@ -77,26 +76,56 @@ export const getProfile = TryCatch(async (req, res, next) => {
 
 export const editProfile = TryCatch(async (req, res, next) => {
   const userId = req.user;
-  const {bio, gender} = req.body;
+  const { bio, gender } = req.body;
   const profilePicture = req.file;
-  let cloudResponse;
-
-  if(profilePicture){
-    const fileUri = getDataUri(profilePicture);
-    cloudResponse = await cloudinary.uploader.upload(fileUri);
-  }
 
   const user = await User.findById(userId).select("-password");
-  if(!user) return new ErrorHandler("User not Found", 404);
+  if (!user) return next(new ErrorHandler("User not Found", 404));
+
+  if (profilePicture) {
+    // Check if the user already has a profile picture and delete it
+    if (user.profilePicture?.public_id) {
+      try {
+        await cloudinary.uploader.destroy(user.profilePicture.public_id);
+      } catch (error) {
+        console.error(
+          "Error deleting old Profile Picture from Cloudinary:",
+          error
+        );
+        return next(
+          new ErrorHandler("Error deleting old Profile Picture", 500)
+        );
+      }
+    }
+
+    // Process and upload the new profile picture
+    try {
+      const optimizedImage = await sharp(profilePicture.buffer)
+        .resize({ width: 800, height: 800, fit: "inside" })
+        .toFormat("jpeg", { quality: 80 })
+        .toBuffer();
+
+      const result = await uploadFilesToCloudinary([optimizedImage]);
+      user.profilePicture = {
+        public_id: result[0].public_id,
+        url: result[0].url,
+      };
+    } catch (error) {
+      console.error(
+        "Error uploading new Profile Picture to Cloudinary:",
+        error
+      );
+      return next(new ErrorHandler("Error uploading new Profile Picture", 500));
+    }
+  }
 
   if (bio) user.bio = bio;
   if (gender) user.gender = gender;
-  if (profilePicture) user.profilePicture = cloudResponse.secure_url;
 
-  await user.save();
-
-  return success(res, "Profile updated successfully", 200, user);
+  const updatedUser = await user.save();
+  return success(res, "Profile updated successfully", 200, updatedUser);
 });
+
 
 export const getSuggestedUsers = TryCatch(async (req, res, next) => {
   const suggestedUsers = await User.find({ _id: {$ne: req.user} }).select("-password");

@@ -1,13 +1,6 @@
 import jwt from "jsonwebtoken";
-import DataUriParser from "datauri/parser.js";
-import path from "path";
-
-const parser = new DataUriParser();
-
-export const getDataUri = (file) => {
-  const extName = path.extname(file.originalname).toString();
-  return parser.format(extName, file.buffer).content;
-};
+import { v4 as uuid } from "uuid";
+import { v2 as cloudinary } from "cloudinary";
 
 export class ErrorHandler extends Error {
   constructor(message, statusCode) {
@@ -46,5 +39,42 @@ export const sendToken = (res, user, code, message) => {
     user,
     message,
   });
+};
+
+const getBase64 = (buffer) => {
+  if (!buffer) {
+    throw new Error("Invalid buffer for Cloudinary upload");
+  }
+  return `data:image/jpeg;base64,${buffer.toString("base64")}`;
+};
+
+export const uploadFilesToCloudinary = async (files = []) => {
+  const uploadPromises = files.map((fileBuffer) => {
+    return new Promise((resolve, reject) => {
+      cloudinary.uploader.upload(
+        getBase64(fileBuffer),
+        { resource_type: "image", public_id: uuid() },
+        (error, result) => {
+          if (error) {
+            console.error("Cloudinary Upload Error:", error);
+            return reject(error);
+          }
+          console.log("Cloudinary Upload Success:", result);
+          resolve(result);
+        }
+      );
+    });
+  });
+
+  try {
+    const results = await Promise.all(uploadPromises);
+    return results.map((result) => ({
+      public_id: result.public_id,
+      url: result.secure_url,
+    }));
+  } catch (err) {
+    console.error("Error during Cloudinary upload:", err);
+    throw new Error("Error uploading files to Cloudinary");
+  }
 };
 

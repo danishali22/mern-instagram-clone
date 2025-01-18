@@ -1,7 +1,7 @@
 import { Post } from "../models/post.js";
 import { User } from "../models/user.js";
 import { Comment } from "../models/comment.js";
-import { ErrorHandler, success, TryCatch } from "../utils/features.js";
+import { ErrorHandler, success, TryCatch, uploadFilesToCloudinary } from "../utils/features.js";
 import sharp from "sharp";
 import { v2 as cloudinary } from "cloudinary";
 
@@ -12,32 +12,41 @@ export const createPost = TryCatch(async (req, res, next) => {
 
   if (!image) return next(new ErrorHandler("Image required", 400));
 
-  const optimizedImageBuffer = await sharp(image.buffer)
+  const optimizedImage = await sharp(image.buffer)
     .resize({ width: 800, height: 800, fit: "inside" })
     .toFormat("jpeg", { quality: 80 })
     .toBuffer();
 
-  // buffer to data uri
-  const fileUri = `data:image/jpeg;base64,${optimizedImageBuffer.toString(
-    "base64"
-  )}`;
-  const cloudinaryResponse = await cloudinary.uploader.upload(fileUri);
+  let uploadedImage;
+
+  try {
+    const result = await uploadFilesToCloudinary([optimizedImage]);
+    uploadedImage = {
+      public_id: result[0].public_id,
+      url: result[0].url,
+    };
+  } catch (error) {
+    console.error("Error uploading post image to Cloudinary:", error);
+    return next(
+      new ErrorHandler("Error uploading post image to Cloudinary", 500)
+    );
+  }
+
   const post = await Post.create({
     caption,
-    image: cloudinaryResponse.secure_url,
+    image: uploadedImage,
     author: authorId,
   });
-  console.log("post", post);
 
-   const user = await User.findById(authorId);
-   if(user){
+  const user = await User.findById(authorId);
+  if (user) {
     user.posts.push(post._id);
     await user.save();
-   }
+  }
 
-   await post.populate({path: "author", select: "-password"});
+  await post.populate({ path: "author", select: "-password" });
 
-   return success(res, "Post created successfully", 200, post);
+  return success(res, "Post created successfully", 200, post);
 });
 
 export const getAllPosts = TryCatch(async (req, res, next) => {
@@ -135,6 +144,14 @@ export const deletePost = TryCatch(async (req, res, next) => {
     // delete all posts from user table
     const user = await User.findById(authorId);
     user.posts = user.posts.filter((id) => id.toString() !== postId);
+
+    // delete cloudinary image
+    try {
+      await cloudinary.uploader.destroy(post.image[0].public_id);
+    } catch (error) {
+      console.error("Error deleting post image from Cloudinary:", error);
+      return next(new ErrorHandler("Error deleting post image", 500));
+    }
 
     // delete all comments of posts
     await Comment.deleteMany({post: postId});
