@@ -4,9 +4,8 @@ import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 
-const Signup = () => {
+const Login = () => {
   const [input, setInput] = useState({
-    username: "",
     email: "",
     password: "",
   });
@@ -16,12 +15,12 @@ const Signup = () => {
     setInput({ ...input, [e.target.name]: e.target.value });
   };
 
-  const signupHandler = async (e) => {
+  const loginHandler = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
       const res = await axios.post(
-        "http://localhost:4000/api/user/register",
+        "http://localhost:4000/api/user/login",
         input,
         {
           headers: {
@@ -34,7 +33,6 @@ const Signup = () => {
       if (res.data.success) {
         toast.success(res.data.message);
         setInput({
-          username: "",
           email: "",
           password: "",
         });
@@ -51,24 +49,14 @@ const Signup = () => {
     <div>
       <div className="w-screen h-screen flex justify-center items-center">
         <form
-          onSubmit={signupHandler}
+          onSubmit={loginHandler}
           className="shadow-lg flex flex-col gap-5 p-8"
         >
           <div className="my-4 text-center">
             <p className="uppercase text-2xl font-bold">Logo</p>
             <p className="text-sm">
-              Signup to see photos & videos from your friends
+              Login to see photos & videos from your friends
             </p>
-          </div>
-          <div>
-            <span className="font-bold">Username</span>
-            <Input
-              type="text"
-              className="focus-visible:ring-transparent my-2"
-              name="username"
-              value={input.username}
-              onChange={changeEventHandler}
-            />
           </div>
           <div>
             <span className="font-bold">Email</span>
@@ -90,11 +78,11 @@ const Signup = () => {
               onChange={changeEventHandler}
             />
           </div>
-          <Button disabled={loading}>Signup</Button>
+          <Button disabled={loading}>Login</Button>
         </form>
       </div>
     </div>
   );
 };
 
-export default Signup;
+export default Login;

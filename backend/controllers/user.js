@@ -20,7 +20,7 @@ export const register = TryCatch(async (req, res, next) => {
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return next(new ErrorHandler("User with this email already exists", 401));
+    return next(new ErrorHandler("User with this email already exists", 409));
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -31,16 +31,17 @@ export const register = TryCatch(async (req, res, next) => {
     password: hashedPassword,
   });
 
-  sendToken(res, user, 201, "User created");
+  sendToken(res, user, 201, "Account created successfully");
 });
 
 export const login = TryCatch(async (req, res, next) => {
-  const { username, password } = req.body;
-  const user = await User.findOne({ username }).select("+password");
+  const { email, password } = req.body;
+  if (!email || !password) return next(new ErrorHandler("Something is missing, please check!", 404));
+  const user = await User.findOne({ email }).select("+password");
   if (!user) return next(new ErrorHandler("Invalid Username or Password", 404));
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch)
+  const isPasswordMatch = await bcrypt.compare(password, user.password);
+  if (!isPasswordMatch)
     return next(new ErrorHandler("Invalid Username or Password", 404));
 
   const populatedPost = await Promise.all(
@@ -55,7 +56,7 @@ export const login = TryCatch(async (req, res, next) => {
 
   user.posts = populatedPost;
 
-  sendToken(res, user, 200, `Welcome back ${user.name}`);
+  sendToken(res, user, 200, `Welcome back ${user.username}`);
 });
 
 export const logout = TryCatch(async (req, res, next) => {
