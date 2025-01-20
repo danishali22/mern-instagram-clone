@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import {Link} from "react-router-dom"
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -91,6 +92,7 @@ const Signup = () => {
             />
           </div>
           <Button disabled={loading}>Signup</Button>
+          <span className="text-center">Already have an account? <Link className="text-blue-600" to="/login">Login</Link></span>
         </form>
       </div>
     </div>
