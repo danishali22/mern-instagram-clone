@@ -1,5 +1,3 @@
-import { envMode } from "../app.js";
-
 export const errorMiddleware = (err, req, res, next) => {
   err.message ||= "Internal Server Error";
   err.statusCode ||= 500;
@@ -20,10 +18,6 @@ export const errorMiddleware = (err, req, res, next) => {
     success: false,
     message: err.message,
   };
-
-  if (envMode === "DEVELOPMENT") {
-    response.error = err;
-  }
 
   return res.status(err.statusCode).json(response);
 };

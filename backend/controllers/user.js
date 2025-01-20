@@ -20,7 +20,7 @@ export const register = TryCatch(async (req, res, next) => {
 
   const existingUser = await User.findOne({ email });
   if (existingUser) {
-    return next(new ErrorHandler("User with this email already exists", 409));
+    return next(new ErrorHandler("User with this email already exists", 401));
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);

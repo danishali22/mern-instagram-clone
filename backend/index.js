@@ -9,6 +9,7 @@ import { v2 as cloudinary } from "cloudinary";
 import userRoutes from "./routes/user.js";
 import postRoutes from "./routes/post.js";
 import messageRoutes from "./routes/message.js";
+import { errorMiddleware } from "./middlewares/error.js";
 
 // Load environment variables
 dotenv.config({ path: "./.env" });
@@ -42,6 +43,8 @@ app.use("/api/message", messageRoutes);
 app.get("/", (req, res) => {
   res.send("Home Route");
 });
+
+app.use(errorMiddleware);
 
 app.listen(port, ()=> {
     connectDB(mongoUri);
