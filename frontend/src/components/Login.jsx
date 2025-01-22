@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 
 const Login = () => {
   const [input, setInput] = useState({
@@ -11,6 +12,7 @@ const Login = () => {
     password: "",
   });
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -37,6 +39,7 @@ const Login = () => {
           email: "",
           password: "",
         });
+        navigate("/");
       }
     } catch (error) {
       console.log(error);
@@ -79,7 +82,16 @@ const Login = () => {
               onChange={changeEventHandler}
             />
           </div>
-          <Button disabled={loading}>Login</Button>
+          {
+            loading ? (
+              <Button>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Please Wait
+              </Button>
+            ) : (
+              <Button disabled={loading}>Login</Button>
+            )
+          }
           <span className="text-center">
             Doesnt have an account?{" "}
             <Link className="text-blue-600" to="/signup">
