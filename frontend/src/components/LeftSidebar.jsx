@@ -35,7 +35,7 @@ const LeftSidebar = () => {
       const res = await axios.get(`http://localhost:4000/api/user/logout`, {
         withCredentials: true,
       });
-      if (res.data.message) {
+      if (res.data.success) {
         dipatch(setAuthUser(null));
         navigate("/login");
         toast.success(res.data.message);
