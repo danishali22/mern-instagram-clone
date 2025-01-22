@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import { MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
@@ -14,7 +15,7 @@ import CommentDialog from "./CommentDialog";
 import { useState } from "react";
 
 
-const Post = () => {
+const Post = ({post}) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
 
@@ -28,10 +29,10 @@ const Post = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src="" alt="User Image" />
+            <AvatarImage src={post.author.profilePicture.url} alt="User Image" />
             <AvatarFallback />
           </Avatar>
-          <h1>username</h1>
+          <h1>{post.author.username}</h1>
         </div>
         <Dialog>
           <DialogTrigger asChild>
@@ -55,7 +56,7 @@ const Post = () => {
       </div>
       <img
         className="rounded-sm my-2 w-full aspect-square object-cover"
-        src="https://images.pexels.com/photos/3861972/pexels-photo-3861972.jpeg"
+        src={post.image[0].url}
         alt="Post Image"
       />
       <div className="flex justify-between items-center my-2">
@@ -69,10 +70,10 @@ const Post = () => {
         </div>
         <Bookmark className="cursor-pointer hover:text-gray-600" />
       </div>
-      <span className="font-medium mb-2 block">1k Likes</span>
+      <span className="font-medium mb-2 block">{post.likes.length} Like</span>
       <p>
-        <span className="font-medium mr-2">username</span>
-        caption
+        <span className="font-medium mr-2">{post.author.username}</span>
+        {post?.caption}
       </p>
       <span onClick={()=> setOpen(true)} className="cursor-pointer text-gray-400 text-sm">View all 10 comments</span>
       <CommentDialog open={open} setOpen={setOpen} />
