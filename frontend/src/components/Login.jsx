@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
+import { Instagram } from "lucide-react";
 
 const Login = () => {
   const [input, setInput] = useState({
@@ -57,7 +58,7 @@ const Login = () => {
           className="shadow-lg flex flex-col gap-5 p-8"
         >
           <div className="my-4 text-center">
-            <p className="uppercase text-2xl font-bold">Logo</p>
+            <Instagram className="mx-auto mb-3 w-12 h-12" />
             <p className="text-sm">
               Login to see photos & videos from your friends
             </p>
