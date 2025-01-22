@@ -64,7 +64,7 @@ const CommentDialog = ({ open, setOpen }) => {
             <div className="p-4">
               <div className="flex items-center gap-2">
                 <input type="text" placeholder="Write a comment..." className="outline-none w-full border border-gray-300 p-2 rounded" onChange={changeEventHandler} value={text} />
-                <Button variant="outline" onClick={sendMessageHandler}>Send</Button>
+                <Button disabled={!text.trim()} variant="outline" onClick={sendMessageHandler}>Send</Button>
               </div>
             </div>
           </div>

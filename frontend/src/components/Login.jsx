@@ -6,6 +6,8 @@ import { toast } from "sonner";
 import { Link, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { Instagram } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { setAuthUser } from "@/redux/authSlice";
 
 const Login = () => {
   const [input, setInput] = useState({
@@ -14,6 +16,7 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const changeEventHandler = (e) => {
     setInput({ ...input, [e.target.name]: e.target.value });
@@ -35,6 +38,7 @@ const Login = () => {
       );
       console.log("res", res);
       if (res.data.success) {
+        dispatch(setAuthUser(res.data.user))
         toast.success(res.data.message);
         setInput({
           email: "",
