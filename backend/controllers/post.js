@@ -144,6 +144,7 @@ export const deletePost = TryCatch(async (req, res, next) => {
     // delete all posts from user table
     const user = await User.findById(authorId);
     user.posts = user.posts.filter((id) => id.toString() !== postId);
+    await user.save();
 
     // delete cloudinary image
     try {
