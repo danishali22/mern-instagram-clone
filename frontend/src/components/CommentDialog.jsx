@@ -10,13 +10,20 @@ import { axiosInstance } from "@/lib/utils";
 import { setPosts } from "@/redux/postSlice";
 import { toast } from "sonner";
 import { useDispatch } from "react-redux";
+import { useEffect } from "react";
 
 // eslint-disable-next-line react/prop-types
 const CommentDialog = ({ open, setOpen }) => {
   const [text, setText] = useState("");
   const { posts, selectedPost } = useSelector((store) => store.post);
-  const [comment, setComment] = useState(selectedPost?.comments);
+  const [comment, setComment] = useState([]);
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (selectedPost) {
+      setComment(selectedPost?.comments);
+    }
+  }, [selectedPost]);
 
   const changeEventHandler = (e) => {
     const inputText = e.target.value;
