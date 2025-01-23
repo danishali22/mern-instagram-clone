@@ -24,6 +24,7 @@ const Post = ({post}) => {
   const { posts } = useSelector((store) => store.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
   const [postLikeCount, setPostLikeCount] = useState(post.likes.length);
+  const [comment, setComment] = useState(post.comments);
   const dispatch = useDispatch();
 
   const changeEventHandler= (e) => {
@@ -56,7 +57,6 @@ const Post = ({post}) => {
     try {
       const action = liked ? 'dislike' : 'like'
       const res = await axiosInstance.get(`/post/${post._id}/${action}`);
-      console.log(res);
       if (res.data.success) {
         const updatedLikes = liked ? postLikeCount - 1 : postLikeCount + 1
         setPostLikeCount(updatedLikes);
@@ -74,6 +74,26 @@ const Post = ({post}) => {
     } catch (error) {
       console.log("Error perform action on this post", error);
       toast.error(error.response.data.message);
+    }
+  }
+
+  const commentHandler = async () => {
+    try {
+      const res = await axiosInstance.post(`/post/${post._id}/comment`, {text});
+      if(res.data.success){
+        const updatedCommentData = [...comment, res.data.data];
+        setComment(updatedCommentData);
+
+        const updatedPostData = posts.map((p)=> 
+          p._id === post._id ? {...p, comments: updatedCommentData} : p
+        );
+        dispatch(setPosts(updatedPostData));
+        setText("");
+        toast.success(res.data.message);
+      }
+    } catch (error) {
+       console.log("error comment on post");
+       toast.error(error.response.data.message); 
     }
   }
 
@@ -158,7 +178,7 @@ const Post = ({post}) => {
         onClick={() => setOpen(true)}
         className="cursor-pointer text-gray-400 text-sm"
       >
-        View all 10 comments
+        View all {comment.length} comments
       </span>
       <CommentDialog open={open} setOpen={setOpen} />
       <div className="flex items-center justify-between">
@@ -169,7 +189,7 @@ const Post = ({post}) => {
           onChange={changeEventHandler}
           className="outline-none w-full text-sm"
         />
-        {text && <span className="text-[#3BADF8]">Post</span>}
+        {text && <span onClick={commentHandler} className="cursor-pointer text-[#3BADF8]">Post</span>}
       </div>
     </div>
   );
