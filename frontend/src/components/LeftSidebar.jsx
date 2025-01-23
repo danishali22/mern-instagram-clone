@@ -29,6 +29,7 @@ const LeftSidebar = () => {
   const sidebarHandler = async (textType) => {
     if (textType === "Logout") logoutHandler();
     else if (textType === "Create") setOpen(true);
+    else if (textType === "Profile") navigate(`/profile/${user?._id}`);
   };
 
   const logoutHandler = async () => {
