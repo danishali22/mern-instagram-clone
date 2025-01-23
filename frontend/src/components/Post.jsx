@@ -1,24 +1,19 @@
 /* eslint-disable react/prop-types */
-import { MoreHorizontal } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import {
   Dialog,
   DialogContent,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "./ui/button";
-import { FaRegHeart } from "react-icons/fa";
-import { Bookmark } from "lucide-react";
-import { Send } from "lucide-react";
-import { MessageCircle } from "lucide-react";
-import CommentDialog from "./CommentDialog";
-import { useState } from "react";
-import { useSelector } from "react-redux";
-import { toast } from "sonner";
-import { useDispatch } from "react-redux";
-import { setPosts } from "@/redux/postSlice";
-import { Loader2 } from "lucide-react";
 import { axiosInstance } from "@/lib/utils";
+import { setPosts } from "@/redux/postSlice";
+import { Bookmark, Loader2, MessageCircle, MoreHorizontal, Send } from "lucide-react";
+import { useState } from "react";
+import { FaHeart, FaRegHeart } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
+import CommentDialog from "./CommentDialog";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
 
 
 const Post = ({post}) => {
@@ -27,6 +22,8 @@ const Post = ({post}) => {
   const [loading, setLoading] = useState(false);
   const {user} = useSelector((store)=> store.auth);
   const { posts } = useSelector((store) => store.post);
+  const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
+  const [postLikeCount, setPostLikeCount] = useState(post.likes.length);
   const dispatch = useDispatch();
 
   const changeEventHandler= (e) => {
@@ -52,6 +49,31 @@ const Post = ({post}) => {
       toast.error(error.response.data.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  const likeOrDislikePostHandler = async () => {
+    try {
+      const action = liked ? 'dislike' : 'like'
+      const res = await axiosInstance.get(`/post/${post._id}/${action}`);
+      console.log(res);
+      if (res.data.success) {
+        const updatedLikes = liked ? postLikeCount - 1 : postLikeCount + 1
+        setPostLikeCount(updatedLikes);
+        setLiked(!liked);
+        // update post data
+        const updatedPostData = posts.map((p) => 
+          p._id === post._id ? {
+            ...p,
+            likes: liked ? p.likes.filter((id)=>id!==user._id) : [...p.likes, user._id]
+          } : p
+        );
+        dispatch(setPosts(updatedPostData));
+        toast.success(res.data.message);
+      }
+    } catch (error) {
+      console.log("Error perform action on this post", error);
+      toast.error(error.response.data.message);
     }
   }
 
@@ -106,7 +128,19 @@ const Post = ({post}) => {
       />
       <div className="flex justify-between items-center my-2">
         <div className="flex gap-3 items-center">
-          <FaRegHeart size={"24px"} className="cursor-pointer" />
+          {liked ? (
+            <FaHeart
+              onClick={likeOrDislikePostHandler}
+              size={"24px"}
+              className="cursor-pointer text-red-600"
+            />
+          ) : (
+            <FaRegHeart
+              onClick={likeOrDislikePostHandler}
+              size={"24px"}
+              className="cursor-pointer"
+            />
+          )}
           <MessageCircle
             onClick={() => setOpen(true)}
             className="cursor-pointer hover:text-gray-600"
@@ -115,7 +149,7 @@ const Post = ({post}) => {
         </div>
         <Bookmark className="cursor-pointer hover:text-gray-600" />
       </div>
-      <span className="font-medium mb-2 block">{post.likes.length} Like</span>
+      <span className="font-medium mb-2 block">{postLikeCount} Like</span>
       <p>
         <span className="font-medium mr-2">{post.author.username}</span>
         {post?.caption}
