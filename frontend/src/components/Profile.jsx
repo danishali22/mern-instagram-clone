@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import {useParams} from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { AtSign } from "lucide-react";
 
 const Profile = () => {
   const params = useParams();
@@ -53,16 +55,8 @@ const Profile = () => {
                   </>
                 ) : isFollowing ? (
                   <>
-                    <Button
-                      variant="secondary"
-                    >
-                      Unfollow
-                    </Button>
-                    <Button
-                      variant="secondary"
-                    >
-                      Message
-                    </Button>
+                    <Button variant="secondary">Unfollow</Button>
+                    <Button variant="secondary">Message</Button>
                   </>
                 ) : (
                   <Button
@@ -73,12 +67,43 @@ const Profile = () => {
                   </Button>
                 )}
               </div>
-              <div>
-                
+              <div className="flex items-center gap-4">
+                <p>
+                  <span className="font-semibold">
+                    {userProfile?.posts?.length}
+                  </span>{" "}
+                  posts
+                </p>
+                <p>
+                  <span className="font-semibold">
+                    {userProfile?.followers?.length}
+                  </span>{" "}
+                  followers
+                </p>
+                <p>
+                  <span className="font-semibold">
+                    {userProfile?.following?.length}
+                  </span>{" "}
+                  following
+                </p>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className="font-semibold">
+                  {userProfile?.bio || "bio here..."}
+                </span>
+                <Badge variant="secondary" className="w-fit mb-1 text-xl">
+                  <AtSign />{" "}
+                  <span className="pl-1">{userProfile?.username}</span>
+                </Badge>
+                <span>🤯Learn code with ease</span>
+                <span>🤯Turing code into fun</span>
+                <span>🤯DM for collaboration</span>
               </div>
             </div>
           </section>
         </div>
+        {/* all posts here  */}
+        <div></div>
       </div>
     </div>
   );
