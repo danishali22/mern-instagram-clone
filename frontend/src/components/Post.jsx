@@ -5,7 +5,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { axiosInstance } from "@/lib/utils";
-import { setPosts } from "@/redux/postSlice";
+import { setPosts, setSelectedPosts } from "@/redux/postSlice";
 import { Bookmark, Loader2, MessageCircle, MoreHorizontal, Send } from "lucide-react";
 import { useState } from "react";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
@@ -36,7 +36,7 @@ const Post = ({post}) => {
   const deletePostHandler = async () => {
     setLoading(true); 
     try {
-      const res = await axiosInstance.delete(`/post/${post._id}/delete`);
+      const res = await axiosInstance.delete(`/post/${post?._id}/delete`);
 
       if (res.data.success) {
         const updatedPosts = posts.filter(
@@ -56,7 +56,7 @@ const Post = ({post}) => {
   const likeOrDislikePostHandler = async () => {
     try {
       const action = liked ? 'dislike' : 'like'
-      const res = await axiosInstance.get(`/post/${post._id}/${action}`);
+      const res = await axiosInstance.get(`/post/${post?._id}/${action}`);
       if (res.data.success) {
         const updatedLikes = liked ? postLikeCount - 1 : postLikeCount + 1
         setPostLikeCount(updatedLikes);
@@ -79,7 +79,7 @@ const Post = ({post}) => {
 
   const commentHandler = async () => {
     try {
-      const res = await axiosInstance.post(`/post/${post._id}/comment`, {text});
+      const res = await axiosInstance.post(`/post/${post?._id}/comment`, {text});
       if(res.data.success){
         const updatedCommentData = [...comment, res.data.data];
         setComment(updatedCommentData);
@@ -162,7 +162,10 @@ const Post = ({post}) => {
             />
           )}
           <MessageCircle
-            onClick={() => setOpen(true)}
+            onClick={() => {
+              dispatch(setSelectedPosts(post));
+              setOpen(true);
+            }}
             className="cursor-pointer hover:text-gray-600"
           />
           <Send className="cursor-pointer hover:text-gray-600" />
@@ -175,7 +178,10 @@ const Post = ({post}) => {
         {post?.caption}
       </p>
       <span
-        onClick={() => setOpen(true)}
+        onClick={() => {
+          dispatch(setSelectedPosts(post));
+          setOpen(true);
+        }}
         className="cursor-pointer text-gray-400 text-sm"
       >
         View all {comment.length} comments
@@ -189,7 +195,14 @@ const Post = ({post}) => {
           onChange={changeEventHandler}
           className="outline-none w-full text-sm"
         />
-        {text && <span onClick={commentHandler} className="cursor-pointer text-[#3BADF8]">Post</span>}
+        {text && (
+          <span
+            onClick={commentHandler}
+            className="cursor-pointer text-[#3BADF8]"
+          >
+            Post
+          </span>
+        )}
       </div>
     </div>
   );

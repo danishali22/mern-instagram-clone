@@ -17,10 +17,11 @@ import { setAuthUser } from "@/redux/authSlice";
 import { useState } from "react";
 import CreatePost from "./CreatePost";
 import { axiosInstance } from "@/lib/utils";
+import { setPosts, setSelectedPosts } from "@/redux/postSlice";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
-  const dipatch = useDispatch();
+  const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth);
 
   const [open, setOpen] = useState(false);
@@ -34,7 +35,9 @@ const LeftSidebar = () => {
     try {
       const res = await axiosInstance.get("/user/logout");
       if (res.data.success) {
-        dipatch(setAuthUser(null));
+        dispatch(setAuthUser(null));
+        dispatch(setPosts([]));
+        dispatch(setSelectedPosts(null));
         navigate("/login");
         toast.success(res.data.message || "An error occurred");
       }

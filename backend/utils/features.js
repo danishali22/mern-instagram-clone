@@ -59,7 +59,6 @@ export const uploadFilesToCloudinary = async (files = []) => {
             console.error("Cloudinary Upload Error:", error);
             return reject(error);
           }
-          console.log("Cloudinary Upload Success:", result);
           resolve(result);
         }
       );
