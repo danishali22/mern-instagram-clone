@@ -13,11 +13,13 @@ import { Send } from "lucide-react";
 import { MessageCircle } from "lucide-react";
 import CommentDialog from "./CommentDialog";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 
 
 const Post = ({post}) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
+  const {user} = useSelector((store)=> store.auth);
 
   const changeEventHandler= (e) => {
     e.preventDefault();
@@ -29,7 +31,10 @@ const Post = ({post}) => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Avatar>
-            <AvatarImage src={post?.author?.profilePicture?.url} alt="User Image" />
+            <AvatarImage
+              src={post?.author?.profilePicture?.url}
+              alt="User Image"
+            />
             <AvatarFallback />
           </Avatar>
           <h1>{post.author.username}</h1>
@@ -48,9 +53,11 @@ const Post = ({post}) => {
             <Button variant="ghost" className="cursor-pointer w-fit">
               Add to Favouties
             </Button>
-            <Button variant="ghost" className="cursor-pointer w-fit">
-              Delete
-            </Button>
+            {user && user?._id === post?.author?._id && (
+              <Button variant="ghost" className="cursor-pointer w-fit">
+                Delete
+              </Button>
+            )}
           </DialogContent>
         </Dialog>
       </div>
@@ -75,7 +82,12 @@ const Post = ({post}) => {
         <span className="font-medium mr-2">{post.author.username}</span>
         {post?.caption}
       </p>
-      <span onClick={()=> setOpen(true)} className="cursor-pointer text-gray-400 text-sm">View all 10 comments</span>
+      <span
+        onClick={() => setOpen(true)}
+        className="cursor-pointer text-gray-400 text-sm"
+      >
+        View all 10 comments
+      </span>
       <CommentDialog open={open} setOpen={setOpen} />
       <div className="flex items-center justify-between">
         <input
