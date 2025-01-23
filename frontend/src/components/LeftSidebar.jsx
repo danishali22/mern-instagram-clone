@@ -11,12 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Instagram } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { setAuthUser } from "@/redux/authSlice";
 import { useState } from "react";
 import CreatePost from "./CreatePost";
+import { axiosInstance } from "@/lib/utils";
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
@@ -32,18 +32,17 @@ const LeftSidebar = () => {
 
   const logoutHandler = async () => {
     try {
-      const res = await axios.get(`http://localhost:4000/api/user/logout`, {
-        withCredentials: true,
-      });
+      const res = await axiosInstance.get("/user/logout");
       if (res.data.success) {
         dipatch(setAuthUser(null));
         navigate("/login");
-        toast.success(res.data.message);
+        toast.success(res.data.message || "An error occurred");
       }
     } catch (error) {
       toast.error(error.response.data.message);
     }
   };
+
   const sidebarItems = [
     { icon: <Home />, text: "Home" },
     { icon: <Search />, text: "Search" },

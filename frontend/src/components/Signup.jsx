@@ -1,11 +1,10 @@
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { axiosInstance } from "@/lib/utils";
+import { Instagram, Loader2 } from "lucide-react";
 import { useState } from "react";
-import axios from "axios";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import {Link, useNavigate} from "react-router-dom"
-import { Loader2 } from "lucide-react";
-import { Instagram } from "lucide-react";
 
 const Signup = () => {
   const [input, setInput] = useState({
@@ -24,16 +23,8 @@ const Signup = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:4000/api/user/register",
-        input,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+      const res = await axiosInstance.post("/user/register", input);
+
       console.log("res", res);
       if (res.data.success) {
         toast.success(res.data.message);

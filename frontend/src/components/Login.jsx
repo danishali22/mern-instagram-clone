@@ -1,13 +1,12 @@
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import axios from "axios";
-import { toast } from "sonner";
-import { Link, useNavigate } from "react-router-dom";
-import { Loader2 } from "lucide-react";
-import { Instagram } from "lucide-react";
-import { useDispatch } from "react-redux";
+import { Input } from "@/components/ui/input";
+import { axiosInstance } from "@/lib/utils";
 import { setAuthUser } from "@/redux/authSlice";
+import { Instagram, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const Login = () => {
   const [input, setInput] = useState({
@@ -26,17 +25,8 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:4000/api/user/login",
-        input,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
-      console.log("res", res);
+      const res = await axiosInstance.post("/user/login", input);
+
       if (res.data.success) {
         dispatch(setAuthUser(res.data.user))
         toast.success(res.data.message);

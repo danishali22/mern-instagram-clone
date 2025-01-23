@@ -53,7 +53,7 @@ export const login = TryCatch(async (req, res, next) => {
       return null;
     })
   );
-
+    
   user.posts = populatedPost;
 
   sendToken(res, user, 200, `Welcome back ${user.username}`);

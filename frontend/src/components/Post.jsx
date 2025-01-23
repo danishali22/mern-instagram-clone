@@ -15,10 +15,10 @@ import CommentDialog from "./CommentDialog";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
-import axios from "axios";
 import { useDispatch } from "react-redux";
 import { setPosts } from "@/redux/postSlice";
 import { Loader2 } from "lucide-react";
+import { axiosInstance } from "@/lib/utils";
 
 
 const Post = ({post}) => {
@@ -38,10 +38,8 @@ const Post = ({post}) => {
   const deletePostHandler = async () => {
     setLoading(true); 
     try {
-      const res = await axios.delete(
-        `http://localhost:4000/api/post/${post._id}/delete`,
-        { withCredentials: true }
-      );
+      const res = await axiosInstance.delete(`/post/${post._id}/delete`);
+
       if (res.data.success) {
         const updatedPosts = posts.filter(
           (postItem) => postItem?._id !== post?._id

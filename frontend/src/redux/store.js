@@ -13,6 +13,8 @@ import {
 import storage from "redux-persist/lib/storage";
 import { combineReducers } from "@reduxjs/toolkit";
 
+export const server = import.meta.env.API_BASE_URL;
+
 const persistConfig = {
   key: "root",
   version: 1,
