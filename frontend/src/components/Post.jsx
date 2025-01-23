@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import CommentDialog from "./CommentDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
 
 
 const Post = ({post}) => {
@@ -108,7 +109,10 @@ const Post = ({post}) => {
             />
             <AvatarFallback />
           </Avatar>
-          <h1>{post.author.username}</h1>
+          <div className="flex items-center gap-3">
+            <h1>{post.author.username}</h1>
+            { user?._id === post?.author?._id && <Badge variant="secondary">Author</Badge>} 
+          </div>
         </div>
         <Dialog>
           <DialogTrigger asChild>
