@@ -38,11 +38,11 @@ export const login = TryCatch(async (req, res, next) => {
   const { email, password } = req.body;
   if (!email || !password) return next(new ErrorHandler("Something is missing, please check!", 404));
   const user = await User.findOne({ email }).select("+password");
-  if (!user) return next(new ErrorHandler("Invalid Username or Password", 404));
+  if (!user) return next(new ErrorHandler("Invalid Email or Password", 404));
 
   const isPasswordMatch = await bcrypt.compare(password, user.password);
   if (!isPasswordMatch)
-    return next(new ErrorHandler("Invalid Username or Password", 404));
+    return next(new ErrorHandler("Invalid Email or Password", 404));
 
   const populatedPost = await Promise.all(
     user.posts.map(async(postId) => {
