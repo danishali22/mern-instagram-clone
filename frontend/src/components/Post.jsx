@@ -14,18 +14,49 @@ import { MessageCircle } from "lucide-react";
 import CommentDialog from "./CommentDialog";
 import { useState } from "react";
 import { useSelector } from "react-redux";
+import { toast } from "sonner";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setPosts } from "@/redux/postSlice";
+import { Loader2 } from "lucide-react";
 
 
 const Post = ({post}) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const {user} = useSelector((store)=> store.auth);
+  const { posts } = useSelector((store) => store.post);
+  const dispatch = useDispatch();
 
   const changeEventHandler= (e) => {
     e.preventDefault();
     const inputText = e.target.value;
     inputText.trim() ? setText(inputText) : setText("");
   }
+
+  const deletePostHandler = async () => {
+    setLoading(true); 
+    try {
+      const res = await axios.delete(
+        `http://localhost:4000/api/post/${post._id}/delete`,
+        { withCredentials: true }
+      );
+      if (res.data.success) {
+        const updatedPosts = posts.filter(
+          (postItem) => postItem?._id !== post?._id
+        );
+        dispatch(setPosts(updatedPosts));
+        toast.success(res.data.message);
+      }
+    } catch (error) {
+      console.log("Error deleting post", error);
+      toast.error(error.response.data.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between">
@@ -54,8 +85,17 @@ const Post = ({post}) => {
               Add to Favouties
             </Button>
             {user && user?._id === post?.author?._id && (
-              <Button variant="ghost" className="cursor-pointer w-fit">
-                Delete
+              <Button
+                onClick={deletePostHandler}
+                variant="ghost"
+                className="cursor-pointer w-fit"
+                disabled={loading}
+              >
+                {loading ? (
+                  <Loader2 className="animate-spin h-4 w-4" />
+                ) : (
+                  "Delete"
+                )}
               </Button>
             )}
           </DialogContent>
