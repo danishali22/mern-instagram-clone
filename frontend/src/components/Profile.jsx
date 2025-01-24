@@ -5,15 +5,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { AtSign } from "lucide-react";
+import { useState } from "react";
 
 const Profile = () => {
   const params = useParams();
   const userId = params.id
   useGetUserProfile(userId);
+  const [activeTab, setActiveTab] = useState("posts");
 
   const {userProfile} = useSelector((store) => store.auth);
   const isLoggedInUserProfile = true;
   const isFollowing = true;
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+  }
 
   return (
     <div className="flex justify-center max-w-5xl mx-auto pl-10">
@@ -103,7 +109,42 @@ const Profile = () => {
           </section>
         </div>
         {/* all posts here  */}
-        <div></div>
+        <div className="border-t border-gray-200">
+          <div className="flex items-center justify-center gap-10 text-sm">
+            <span
+              className={`py-3 cursor-pointer ${
+                activeTab === "posts" ? "font-bold" : ""
+              }`}
+              onClick={() => handleTabChange("posts")}
+            >
+              POSTS
+            </span>
+            <span
+              className={`py-3 cursor-pointer ${
+                activeTab === "saved" ? "font-bold" : ""
+              }`}
+              onClick={() => handleTabChange("saved")}
+            >
+              SAVED
+            </span>
+            <span
+              className={`py-3 cursor-pointer ${
+                activeTab === "reels" ? "font-bold" : ""
+              }`}
+              onClick={() => handleTabChange("reels")}
+            >
+              REELS
+            </span>
+            <span
+              className={`py-3 cursor-pointer ${
+                activeTab === "tags" ? "font-bold" : ""
+              }`}
+              onClick={() => handleTabChange("tags")}
+            >
+              TAGS
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   );
