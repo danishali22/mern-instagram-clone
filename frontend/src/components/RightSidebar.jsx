@@ -13,7 +13,7 @@ const RightSidebar = () => {
             <AvatarFallback />
           </Avatar>
         </Link>
-        <div className="">
+        <div>
           <h1 className="text-sm font-semibold">
             <Link to={`/${user?._id}/profile`}>{user?.username}</Link>
           </h1>

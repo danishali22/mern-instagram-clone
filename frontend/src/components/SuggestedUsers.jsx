@@ -17,7 +17,7 @@ const SuggestedUsers = () => {
             className="flex items-center justify-between my-6"
           >
             <div className="flex items-center gap-2">
-              <Link to={`${user?._id}/profile`}>
+              <Link to={`profile/${user?._id}`}>
                 <Avatar>
                   <AvatarImage
                     src={user?.profilePicture?.url}

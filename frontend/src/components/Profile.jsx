@@ -8,6 +8,7 @@ import { AtSign } from "lucide-react";
 import { useState } from "react";
 import { Heart } from "lucide-react";
 import { MessageCircle } from "lucide-react";
+import {Link} from "react-router-dom"
 
 const Profile = () => {
   const params = useParams();
@@ -15,8 +16,8 @@ const Profile = () => {
   useGetUserProfile(userId);
   const [activeTab, setActiveTab] = useState("posts");
 
-  const {userProfile} = useSelector((store) => store.auth);
-  const isLoggedInUserProfile = true;
+  const {userProfile, user} = useSelector((store) => store.auth);
+  const isLoggedInUserProfile = userProfile?._id === user?._id;
   const isFollowing = true;
 
   const handleTabChange = (tab) => {
@@ -44,12 +45,14 @@ const Profile = () => {
                 <span>{userProfile?.username}</span>
                 {isLoggedInUserProfile ? (
                   <>
+                  <Link to="/account/edit">
                     <Button
                       variant="secondary"
                       className="hover:bg-gray-200 h-8"
                     >
                       Edit Profile
                     </Button>
+                    </Link>
                     <Button
                       variant="secondary"
                       className="hover:bg-gray-200 h-8"
