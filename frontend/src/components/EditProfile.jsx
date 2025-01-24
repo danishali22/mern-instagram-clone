@@ -16,6 +16,7 @@ import { Loader2 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import {useNavigate} from "react-router-dom"
 import { setAuthUser } from "@/redux/authSlice";
+import { Textarea } from "./ui/textarea";
 
 
 const EditProfile = () => {
@@ -105,12 +106,12 @@ const EditProfile = () => {
         </div>
         <div>
           <h1 className="font-bold text-xl mb-2">Bio</h1>
-          <textarea
-            className="focus-visible:ring-transparent w-full border-gray-300"
+          <Textarea
+            className="focus-visible:ring-transparent"
             name="bio"
             value={input.bio}
             onChange={(e) => setInput({ ...input, bio: e.target.value })}
-          ></textarea>
+          />
         </div>
         <div>
           <h1 className="font-bold text-xl mb-2">Gender</h1>
@@ -118,7 +119,7 @@ const EditProfile = () => {
             defaultValue={input.gender}
             onValueChange={selectChangeHandler}
           >
-            <SelectTrigger className="w-[180px] w-full">
+            <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -127,7 +128,7 @@ const EditProfile = () => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex justify-end">
+        <div>
           {loading ? (
             <Button className="bg-[#0095F6] h-6 hover:bg-[#318bc7] p-4 rounded">
               Please Wait

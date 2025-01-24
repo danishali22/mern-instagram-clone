@@ -157,7 +157,7 @@ const Profile = () => {
               return (
                 <div key={post} className="relative group cursor-pointer">
                   <img
-                    // src={post?.image[0]?.url}
+                    src={post?.image[0]?.url}
                     alt="Post Image"
                     className="rounded-sm my-2 w-full aspect-square object-cover"
                   />
@@ -165,13 +165,11 @@ const Profile = () => {
                     <div className="flex items-center text-white space-x-4">
                       <button className="flex items-center gap-2 hover:text-gray-300">
                         <Heart />
-                        <span>10</span>
-                        {/* <span>{post?.like.length}</span> */}
+                        <span>{post?.likes?.length}</span>
                       </button>
                       <button className="flex items-center gap-2 hover:text-gray-300">
                         <MessageCircle />
-                        <span>20</span>
-                        {/* <span>{post?.comments.length}</span> */}
+                        <span>{post?.comments?.length}</span>
                       </button>
                     </div>
 

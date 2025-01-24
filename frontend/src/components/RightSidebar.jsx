@@ -7,7 +7,7 @@ const RightSidebar = () => {
   return (
     <div className="w-fit my-10 pr-32">
       <div className="flex items-center gap-2">
-        <Link to={`/${user?._id}/profile`}>
+        <Link to={`/profile/${user?._id}`}>
           <Avatar>
             <AvatarImage src={user?.profilePicture?.url} alt="User Image" />
             <AvatarFallback />
