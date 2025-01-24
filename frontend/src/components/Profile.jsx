@@ -6,6 +6,8 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { AtSign } from "lucide-react";
 import { useState } from "react";
+import { Heart } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 const Profile = () => {
   const params = useParams();
@@ -20,6 +22,8 @@ const Profile = () => {
   const handleTabChange = (tab) => {
     setActiveTab(tab);
   }
+
+  const displayPost = activeTab === "posts" ? userProfile?.posts : userProfile?.bookmarks
 
   return (
     <div className="flex justify-center max-w-5xl mx-auto pl-10">
@@ -143,6 +147,35 @@ const Profile = () => {
             >
               TAGS
             </span>
+          </div>
+          <div className="grid grid-cols-3 gap-1">
+            {displayPost?.map((post) => {
+              console.log(displayPost);
+              return (
+                <div key={post} className="relative group cursor-pointer">
+                  <img
+                    // src={post?.image[0]?.url}
+                    alt="Post Image"
+                    className="rounded-sm my-2 w-full aspect-square object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    <div className="flex items-center text-white space-x-4">
+                      <button className="flex items-center gap-2 hover:text-gray-300">
+                        <Heart />
+                        <span>10</span>
+                        {/* <span>{post?.like.length}</span> */}
+                      </button>
+                      <button className="flex items-center gap-2 hover:text-gray-300">
+                        <MessageCircle />
+                        <span>20</span>
+                        {/* <span>{post?.comments.length}</span> */}
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
