@@ -2,7 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { axiosInstance } from "@/lib/utils";
 import { Instagram, Loader2 } from "lucide-react";
+import { useEffect } from "react";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -12,6 +14,8 @@ const Signup = () => {
     email: "",
     password: "",
   });
+
+  const { user } = useSelector((store) => store.auth);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -42,6 +46,10 @@ const Signup = () => {
       setLoading(false);
     }
   };
+
+  useEffect( ()=>{
+      if(user) navigate("/");
+    }, []);
 
   return (
     <div>

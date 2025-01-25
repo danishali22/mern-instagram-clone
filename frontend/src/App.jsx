@@ -14,38 +14,59 @@ import { useDispatch } from 'react-redux';
 import { setSocket } from './redux/socketSlice';
 import { setOnlineUsers } from './redux/chatSlice';
 import { setLikeNotification } from './redux/rtmSlice';
+import ProtectedRute from './components/ProtectedRute';
 
 const browserRouter = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: (
+      <ProtectedRute>
+        <MainLayout />
+      </ProtectedRute>
+    ),
     children: [
       {
         path: "/",
-        element: <Home />
+        element: (
+          <ProtectedRute>
+            <Home />
+          </ProtectedRute>
+        ),
       },
       {
         path: "/profile/:id",
-        element: <Profile />
+        element: (
+          <ProtectedRute>
+            <Profile />
+          </ProtectedRute>
+        ),
       },
       {
         path: "/account/edit",
-        element: <EditProfile />
+        element: (
+          <ProtectedRute>
+            <EditProfile />
+          </ProtectedRute>
+        ),
       },
       {
         path: "/chat",
-        element: <Chat />
+        element: (
+          <ProtectedRute>
+            <Chat />
+          </ProtectedRute>
+        ),
       },
-    ]
+    ],
   },
   {
     path: "/login",
-    element: <Login />
+    element: <Login />,
   },
   {
     path: "/signup",
-    element: <Signup />
-  }
+    element: <Signup />,
+  },
 ]);
 
 function App() {
@@ -56,9 +77,7 @@ function App() {
   useEffect(()=> {
     if(user){
       const socketio = io("http://localhost:4000", {
-        query : {
-          userId: user?._id
-        },
+        query : { userId: user?._id },
         transports: ["websocket"]
       });
       dispatch(setSocket(socketio));

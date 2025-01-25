@@ -3,7 +3,9 @@ import { Input } from "@/components/ui/input";
 import { axiosInstance } from "@/lib/utils";
 import { setAuthUser } from "@/redux/authSlice";
 import { Instagram, Loader2 } from "lucide-react";
+import { useEffect } from "react";
 import { useState } from "react";
+import { useSelector } from "react-redux";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,6 +15,8 @@ const Login = () => {
     email: "",
     password: "",
   });
+  
+  const { user } = useSelector((store) => store.auth);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -43,6 +47,10 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  useEffect( ()=>{
+    if(user) navigate("/");
+  }, []);
 
   return (
     <div>
