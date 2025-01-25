@@ -10,10 +10,10 @@ const rtmSlice = createSlice({
       if (action.payload.type === "like") {
         state.likeNotification.push(action.payload);
       } else if (action.payload.type === "dislike") {
-        state.likeNotification.filter(
+        state.likeNotification = state.likeNotification.filter(
           (item) => item.userId !== action.payload.userId
         );
-      }
+      } 
     },
   },
 });

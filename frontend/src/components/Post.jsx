@@ -111,7 +111,9 @@ const Post = ({post}) => {
           </Avatar>
           <div className="flex items-center gap-3">
             <h1>{post.author.username}</h1>
-            { user?._id === post?.author?._id && <Badge variant="secondary">Author</Badge>} 
+            {user?._id === post?.author?._id && (
+              <Badge variant="secondary">Author</Badge>
+            )}
           </div>
         </div>
         <Dialog>
@@ -119,12 +121,14 @@ const Post = ({post}) => {
             <MoreHorizontal className="cursor-pointer" />
           </DialogTrigger>
           <DialogContent className="flex flex-col items-center text-sm text-center">
-            <Button
-              variant="ghost"
-              className="cursor-pointer w-fit text-[#ED4956] font-bold"
-            >
-              Unfollow
-            </Button>
+            {user && user?._id !== post?.author?._id && (
+              <Button
+                variant="ghost"
+                className="cursor-pointer w-fit text-[#ED4956] font-bold"
+              >
+                Unfollow
+              </Button>
+            )}
             <Button variant="ghost" className="cursor-pointer w-fit">
               Add to Favouties
             </Button>

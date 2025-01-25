@@ -95,7 +95,7 @@ const LeftSidebar = () => {
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
-                      className="rounded-full h-5 w-5 absolute bg-red-600 hover:bg-red-600 left-6 bottom-6"
+                      className="rounded-full h-5 w-5 absolute bg-red-600 hover:bg-red-600 left-2 bottom-3"
                       size="icon"
                     >
                       {likeNotification.length}
@@ -109,18 +109,20 @@ const LeftSidebar = () => {
                         likeNotification.map((notification) => (
                           <div
                             key={notification?.userId}
-                            className="flex items-center gap-2 p-2 my-2"
+                            className="flex items-center gap-2 my-2"
                           >
                             <Avatar className="w-8 h-8">
                               <AvatarImage
-                                src={notification?.userDetails?.profilePicture?.url}
+                                src={
+                                  notification?.userDetails?.profilePicture?.url
+                                }
                                 alt="User Image"
                               />
                               <AvatarFallback>CN</AvatarFallback>
                             </Avatar>
                             <p className="text-sm">
                               <span className="font-bold">
-                                {notification?.userId?.username}
+                                {notification?.userDeatils?.username} {" "}
                               </span>
                               liked your post
                             </p>
