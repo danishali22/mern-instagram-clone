@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { connectDB } from "./utils/db.js";
 import { v2 as cloudinary } from "cloudinary";
+import { app, server } from "./socket/socket.js";
 
 // routes
 import userRoutes from "./routes/user.js";
@@ -15,8 +16,6 @@ import { errorMiddleware } from "./middlewares/error.js";
 dotenv.config({ path: "./.env" });
 const mongoUri = process.env.MONGO_URI;
 const port = process.env.PORT || 4000;
-
-const app = express();
 
 app.use(express.json());
 app.use(cookieParser());
@@ -46,7 +45,7 @@ app.get("/", (req, res) => {
 
 app.use(errorMiddleware);
 
-app.listen(port, ()=> {
+server.listen(port, ()=> {
     connectDB(mongoUri);
     console.log(`Server listen at port ${port}`)
 });
