@@ -6,14 +6,37 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { MessageCircle } from "lucide-react";
 import Messages from "./Messages";
+import { useState } from "react";
+import { axiosInstance } from "@/lib/utils";
+import { setMessages } from "@/redux/chatSlice";
+import { useEffect } from "react";
 
 const Chat = () => {
+  const [message, setMessage] = useState("");
   const { user, suggestedUsers, selectedUser } = useSelector(
     (store) => store.auth
   );
-  const {onlineUsers} = useSelector((store) => store.chat);
+  const {onlineUsers, messages} = useSelector((store) => store.chat);
   const dispatch = useDispatch();
   let isOnline;
+
+  const sendMessageHandler = async () => {
+    try {
+      const res = await axiosInstance.post(`message/send/${selectedUser._id}`, {message});
+      if(res.data.success){
+        dispatch(setMessages([...messages, res.data.data]));
+        setMessage("");
+      }
+    } catch (error) {
+      console.log("error sending message", error)
+    }
+  }
+
+  useEffect(()=> {
+    return () => {
+      dispatch(setSelectedUser(null));
+    }
+}, []);
 
   return (
     <div className="flex ml-[16%] h-screen">
@@ -78,9 +101,11 @@ const Chat = () => {
             <Input
               type="text"
               className="flex-1 mr-2 focus-visible:ring-transparent"
-              placeholder="Messages..."
+              placeholder="Type message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
             />
-            <Button>Send</Button>
+            <Button onClick={sendMessageHandler}>Send</Button>
           </div>
         </section>
       ) : (

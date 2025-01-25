@@ -31,7 +31,7 @@ export const sendMessage = TryCatch(async (req, res, next) => {
     io.to(receiverSocketId).emit("newMessage", newMessage);
   }
 
-  return success(res, "Message sent", 200, newMessage);
+  return success(res, "Message sent", 201, newMessage);
 });
 
 export const getMessage = TryCatch(async (req, res, next) => {
