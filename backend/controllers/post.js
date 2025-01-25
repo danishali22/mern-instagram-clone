@@ -4,7 +4,7 @@ import { Comment } from "../models/comment.js";
 import { ErrorHandler, success, TryCatch, uploadFilesToCloudinary } from "../utils/features.js";
 import sharp from "sharp";
 import { v2 as cloudinary } from "cloudinary";
-import { getReceiverSocketId } from "../socket/socket.js";
+import { getReceiverSocketId, io } from "../socket/socket.js";
 
 export const createPost = TryCatch(async (req, res, next) => {
   const { caption } = req.body;

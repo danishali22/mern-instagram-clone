@@ -1,28 +1,37 @@
 import {
-  Heart,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { axiosInstance } from "@/lib/utils";
+import { setAuthUser } from "@/redux/authSlice";
+import { setPosts, setSelectedPosts } from "@/redux/postSlice";
+import {
   Home,
+  Instagram,
   LogOut,
   MessageCircle,
   PlusSquare,
   Search,
-  TrendingUp,
+  TrendingUp
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Instagram } from "lucide-react";
-import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { useDispatch } from "react-redux";
-import { setAuthUser } from "@/redux/authSlice";
 import { useState } from "react";
+import { FaRegHeart } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 import CreatePost from "./CreatePost";
-import { axiosInstance } from "@/lib/utils";
-import { setPosts, setSelectedPosts } from "@/redux/postSlice";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Button } from "./ui/button";
+
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth);
+  const { likeNotification } = useSelector(
+    (store) => store.realTimeNotification
+  );
 
   const [open, setOpen] = useState(false);
 
@@ -54,7 +63,7 @@ const LeftSidebar = () => {
     { icon: <Search />, text: "Search" },
     { icon: <TrendingUp />, text: "Explore" },
     { icon: <MessageCircle />, text: "Messages" },
-    { icon: <Heart />, text: "Notifications" },
+    { icon: <FaRegHeart />, text: "Notifications" },
     { icon: <PlusSquare />, text: "Create" },
     {
       icon: (
@@ -82,6 +91,46 @@ const LeftSidebar = () => {
             >
               {item.icon}
               <span>{item.text}</span>
+              {item.text === "Notifications" && likeNotification.length > 0 && (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      className="rounded-full h-5 w-5 absolute bg-red-600 hover:bg-red-600 left-6 bottom-6"
+                      size="icon"
+                    >
+                      {likeNotification.length}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent>
+                    <div>
+                      {likeNotification.length === 0 ? (
+                        <p>No new Notification</p>
+                      ) : (
+                        likeNotification.map((notification) => (
+                          <div
+                            key={notification?.userId}
+                            className="flex items-center gap-2 p-2 my-2"
+                          >
+                            <Avatar className="w-8 h-8">
+                              <AvatarImage
+                                src={notification?.userDetails?.profilePicture?.url}
+                                alt="User Image"
+                              />
+                              <AvatarFallback>CN</AvatarFallback>
+                            </Avatar>
+                            <p className="text-sm">
+                              <span className="font-bold">
+                                {notification?.userId?.username}
+                              </span>
+                              liked your post
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              )}
             </div>
           );
         })}
