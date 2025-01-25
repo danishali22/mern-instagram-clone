@@ -54,7 +54,7 @@ function App() {
 
   useEffect(()=> {
     if(user){
-      const socketio = io("http:localhost:4000", {
+      const socketio = io("http://localhost:4000", {
         query : {
           userId: user?._id
         },
@@ -76,7 +76,7 @@ function App() {
       socket.close();
       dispatch(setSocket(null));
     }
-  }, [user, dispatch, socket]);
+  }, [user, dispatch]);
   return (
     <>
       <RouterProvider router={browserRouter} />
