@@ -2,6 +2,7 @@ import { Message } from "../models/message.js";
 import { Conversation } from "../models/conversation.js";
 import { User } from "../models/user.js";
 import { ErrorHandler, success, TryCatch } from "../utils/features.js";
+import { getReceiverSocketId } from "../socket/socket.js";
 
 export const sendMessage = TryCatch(async (req, res, next) => {
   const senderId = req.user;
@@ -24,6 +25,11 @@ export const sendMessage = TryCatch(async (req, res, next) => {
   if(newMessage) conversation.messages.push(newMessage._id);
 
   await Promise.all([newMessage.save(), conversation.save()]);
+
+  const receiverSocketId = getReceiverSocketId(receiverId);
+  if(receiverSocketId){
+    io.to(receiverSocketId).emit("newMessage", newMessage);
+  }
 
   return success(res, "Message sent", 200, newMessage);
 });
