@@ -1,12 +1,16 @@
 /* eslint-disable react/prop-types */
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { axiosInstance } from "@/lib/utils";
 import { setPosts, setSelectedPosts } from "@/redux/postSlice";
-import { Bookmark, BookmarkCheck, Loader2, MessageCircle, MoreHorizontal, Send, UserX } from "lucide-react";
+import {
+  Bookmark,
+  BookmarkCheck,
+  Loader2,
+  MessageCircle,
+  MoreHorizontal,
+  Send,
+  UserX,
+} from "lucide-react";
 import { useState } from "react";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,12 +21,11 @@ import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { setAuthUser, setUserProfile } from "@/redux/authSlice";
 
-
-const Post = ({post}) => {
+const Post = ({ post }) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {user, userProfile} = useSelector((store)=> store.auth);
+  const { user, userProfile } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
   const [postLikeCount, setPostLikeCount] = useState(post.likes.length);
@@ -30,14 +33,14 @@ const Post = ({post}) => {
   const dispatch = useDispatch();
   const isBookmarked = user?.bookmarks.includes(post?._id);
 
-  const changeEventHandler= (e) => {
+  const changeEventHandler = (e) => {
     e.preventDefault();
     const inputText = e.target.value;
     inputText.trim() ? setText(inputText) : setText("");
-  }
+  };
 
   const deletePostHandler = async () => {
-    setLoading(true); 
+    setLoading(true);
     try {
       const res = await axiosInstance.delete(`/post/${post?._id}/delete`);
 
@@ -54,22 +57,26 @@ const Post = ({post}) => {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   const likeOrDislikePostHandler = async () => {
     try {
-      const action = liked ? 'dislike' : 'like'
+      const action = liked ? "dislike" : "like";
       const res = await axiosInstance.get(`/post/${post?._id}/${action}`);
       if (res.data.success) {
-        const updatedLikes = liked ? postLikeCount - 1 : postLikeCount + 1
+        const updatedLikes = liked ? postLikeCount - 1 : postLikeCount + 1;
         setPostLikeCount(updatedLikes);
         setLiked(!liked);
         // update post data
-        const updatedPostData = posts.map((p) => 
-          p._id === post._id ? {
-            ...p,
-            likes: liked ? p.likes.filter((id)=>id!==user._id) : [...p.likes, user._id]
-          } : p
+        const updatedPostData = posts.map((p) =>
+          p._id === post._id
+            ? {
+                ...p,
+                likes: liked
+                  ? p.likes.filter((id) => id !== user._id)
+                  : [...p.likes, user._id],
+              }
+            : p
         );
         dispatch(setPosts(updatedPostData));
         toast.success(res.data.message);
@@ -78,58 +85,59 @@ const Post = ({post}) => {
       console.log("Error perform action on this post", error);
       toast.error(error.response.data.message);
     }
-  }
+  };
 
   const commentHandler = async () => {
     try {
-      const res = await axiosInstance.post(`/post/${post?._id}/comment`, {text});
-      if(res.data.success){
+      const res = await axiosInstance.post(`/post/${post?._id}/comment`, {
+        text,
+      });
+      if (res.data.success) {
         const updatedCommentData = [...comment, res.data.data];
         setComment(updatedCommentData);
 
-        const updatedPostData = posts.map((p)=> 
-          p._id === post._id ? {...p, comments: updatedCommentData} : p
+        const updatedPostData = posts.map((p) =>
+          p._id === post._id ? { ...p, comments: updatedCommentData } : p
         );
         dispatch(setPosts(updatedPostData));
         setText("");
         toast.success(res.data.message);
       }
     } catch (error) {
-       console.log("error comment on post");
-       toast.error(error.response.data.message); 
+      console.log("error comment on post");
+      toast.error(error.response.data.message);
     }
-  }
+  };
 
   const bookmarkHandler = async () => {
     try {
       const res = await axiosInstance.get(`/post/${post?._id}/bookmark`);
-      if(res.data.success){
+      if (res.data.success) {
         toast.success(res.data.message);
 
         const updatedPostIdToBookmark = user.bookmarks.includes(post._id)
           ? user.bookmarks.filter((id) => id !== post._id)
           : [...user.bookmarks, post._id];
+        dispatch(setAuthUser({ ...user, bookmarks: updatedPostIdToBookmark }));
+
+        if (user?._id === userProfile?._id) {
+          const updatedPostToBookmark = userProfile.bookmarks.some(
+            (bookmark) => bookmark._id === post._id
+          )
+            ? userProfile.bookmarks.filter(
+                (bookmark) => bookmark._id !== post._id
+              )
+            : [...userProfile.bookmarks, post];
+
           dispatch(
-            setAuthUser({ ...user, bookmarks: updatedPostIdToBookmark })
+            setUserProfile({ ...userProfile, bookmarks: updatedPostToBookmark })
           );
-
-        const updatedPostToBookmark = userProfile.bookmarks.some(
-          (bookmark) => bookmark._id === post._id
-        )
-          ? userProfile.bookmarks.filter(
-              (bookmark) => bookmark._id !== post._id
-            )
-          : [...userProfile.bookmarks, post];
-
-        dispatch(
-          setUserProfile({ ...userProfile, bookmarks: updatedPostToBookmark })
-        );
-
+        }
       }
     } catch (error) {
       console.log("error on bookmark post", error);
     }
-  }
+  };
 
   return (
     <div className="my-8 w-full max-w-sm mx-auto">
@@ -261,6 +269,6 @@ const Post = ({post}) => {
       </div>
     </div>
   );
-}
+};
 
-export default Post
+export default Post;
