@@ -22,7 +22,7 @@ const useGetAllMessages = () => {
       }
     };
     fetchAllMessages();
-  }, [dispatch]);
+  }, [selectedUser, dispatch]);
 };
 
 export default useGetAllMessages;

@@ -1,8 +1,7 @@
 import { Message } from "../models/message.js";
 import { Conversation } from "../models/conversation.js";
-import { User } from "../models/user.js";
-import { ErrorHandler, success, TryCatch } from "../utils/features.js";
-import { getReceiverSocketId } from "../socket/socket.js";
+import { success, TryCatch } from "../utils/features.js";
+import { getReceiverSocketId, io } from "../socket/socket.js";
 
 export const sendMessage = TryCatch(async (req, res, next) => {
   const senderId = req.user;
@@ -40,7 +39,7 @@ export const getMessage = TryCatch(async (req, res, next) => {
 
   const conversation = await Conversation.findOne({
     participants: {$all: [senderId, receiverId]}
-  });
+  }).populate("messages");
   const messages = conversation?.messages;
 
   return success(res, "Conversation fetched successfully", 200, messages);

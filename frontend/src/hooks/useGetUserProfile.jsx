@@ -20,7 +20,7 @@ const useGetUserProfile = (userId) => {
       }
     };
     fetchUserProfile();
-  }, [userId]);
+  }, [userId, dispatch]);
 };
 
 export default useGetUserProfile;
