@@ -4,7 +4,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { axiosInstance } from "@/lib/utils";
-import { setAuthUser } from "@/redux/authSlice";
+import { setAuthUser, setSuggestedUsers, setUserProfile } from "@/redux/authSlice";
 import { setPosts, setSelectedPosts } from "@/redux/postSlice";
 import {
   Home,
@@ -48,6 +48,8 @@ const LeftSidebar = () => {
       const res = await axiosInstance.get("/user/logout");
       if (res.data.success) {
         dispatch(setAuthUser(null));
+        dispatch(setUserProfile(null));
+        dispatch(setSuggestedUsers([]));
         dispatch(setPosts([]));
         dispatch(setSelectedPosts(null));
         navigate("/login");

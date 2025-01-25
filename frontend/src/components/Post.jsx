@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/dialog";
 import { axiosInstance } from "@/lib/utils";
 import { setPosts, setSelectedPosts } from "@/redux/postSlice";
-import { Bookmark, Loader2, MessageCircle, MoreHorizontal, Send } from "lucide-react";
+import { Bookmark, BookmarkCheck, Loader2, MessageCircle, MoreHorizontal, Send, UserX } from "lucide-react";
 import { useState } from "react";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,19 +15,20 @@ import CommentDialog from "./CommentDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
-import { BookmarkCheck } from "lucide-react";
+import { setAuthUser, setUserProfile } from "@/redux/authSlice";
 
 
 const Post = ({post}) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {user} = useSelector((store)=> store.auth);
+  const {user, userProfile} = useSelector((store)=> store.auth);
   const { posts } = useSelector((store) => store.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
   const [postLikeCount, setPostLikeCount] = useState(post.likes.length);
   const [comment, setComment] = useState(post.comments);
   const dispatch = useDispatch();
+  const isBookmarked = user?.bookmarks.includes(post?._id);
 
   const changeEventHandler= (e) => {
     e.preventDefault();
@@ -104,6 +105,26 @@ const Post = ({post}) => {
       const res = await axiosInstance.get(`/post/${post?._id}/bookmark`);
       if(res.data.success){
         toast.success(res.data.message);
+
+        const updatedPostIdToBookmark = user.bookmarks.includes(post._id)
+          ? user.bookmarks.filter((id) => id !== post._id)
+          : [...user.bookmarks, post._id];
+          dispatch(
+            setAuthUser({ ...user, bookmarks: updatedPostIdToBookmark })
+          );
+
+        const updatedPostToBookmark = userProfile.bookmarks.some(
+          (bookmark) => bookmark._id === post._id
+        )
+          ? userProfile.bookmarks.filter(
+              (bookmark) => bookmark._id !== post._id
+            )
+          : [...userProfile.bookmarks, post];
+
+        dispatch(
+          setUserProfile({ ...userProfile, bookmarks: updatedPostToBookmark })
+        );
+
       }
     } catch (error) {
       console.log("error on bookmark post", error);
@@ -190,10 +211,17 @@ const Post = ({post}) => {
           />
           <Send className="cursor-pointer hover:text-gray-600" />
         </div>
-        <BookmarkCheck
-          onClick={bookmarkHandler}
-          className="cursor-pointer hover:text-gray-600"
-        />
+        {isBookmarked ? (
+          <BookmarkCheck
+            onClick={bookmarkHandler}
+            className="cursor-pointer hover:text-gray-600"
+          />
+        ) : (
+          <Bookmark
+            onClick={bookmarkHandler}
+            className="cursor-pointer hover:text-gray-600"
+          />
+        )}
       </div>
       <span className="font-medium mb-2 block">{postLikeCount} Like</span>
       <p>

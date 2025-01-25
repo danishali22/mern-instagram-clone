@@ -10,7 +10,7 @@ const SuggestedUsers = () => {
         <h1 className="font-semibold text-gray-600">Suggested for you</h1>
         <span className="font-medium cursor-pointer">See All</span>
       </div>
-      {suggestedUsers.map((user)=>{
+      {suggestedUsers?.map((user)=>{
         return (
           <div
             key={user?._id}
