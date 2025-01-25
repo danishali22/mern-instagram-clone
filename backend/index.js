@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./utils/db.js";
 import { v2 as cloudinary } from "cloudinary";
 import { app, server } from "./socket/socket.js";
+import path from "path";
 
 // routes
 import userRoutes from "./routes/user.js";
@@ -16,6 +17,8 @@ import { errorMiddleware } from "./middlewares/error.js";
 dotenv.config({ path: "./.env" });
 const mongoUri = process.env.MONGO_URI;
 const port = process.env.PORT || 4000;
+
+const __dirname = path.resolve(); 
 
 app.use(express.json());
 app.use(cookieParser());
@@ -39,11 +42,12 @@ app.use("/api/user", userRoutes);
 app.use("/api/post", postRoutes);
 app.use("/api/message", messageRoutes);
 
-app.get("/", (req, res) => {
-  res.send("Home Route");
-});
-
 app.use(errorMiddleware);
+
+app.use(express.static(path.join(__dirname, "/frontend/dist")));
+app.get("*", (req, res) => {
+  res.sendFile(path.resolve(__dirname, "frontend", "dist", "index.html"));
+});
 
 server.listen(port, ()=> {
     connectDB(mongoUri);
