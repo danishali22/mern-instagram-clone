@@ -15,6 +15,7 @@ import CommentDialog from "./CommentDialog";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
+import { BookmarkCheck } from "lucide-react";
 
 
 const Post = ({post}) => {
@@ -98,6 +99,17 @@ const Post = ({post}) => {
     }
   }
 
+  const bookmarkHandler = async () => {
+    try {
+      const res = await axiosInstance.get(`/post/${post?._id}/bookmark`);
+      if(res.data.success){
+        toast.success(res.data.message);
+      }
+    } catch (error) {
+      console.log("error on bookmark post", error);
+    }
+  }
+
   return (
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between">
@@ -178,7 +190,10 @@ const Post = ({post}) => {
           />
           <Send className="cursor-pointer hover:text-gray-600" />
         </div>
-        <Bookmark className="cursor-pointer hover:text-gray-600" />
+        <BookmarkCheck
+          onClick={bookmarkHandler}
+          className="cursor-pointer hover:text-gray-600"
+        />
       </div>
       <span className="font-medium mb-2 block">{postLikeCount} Like</span>
       <p>

@@ -24,6 +24,6 @@ app.get("/:id/dislike", dislikePost);
 app.post("/:id/comment", addComment);
 app.get("/:id/comment/all", getCommentsOfPost);
 app.delete("/:id/delete", deletePost);
-app.post("/:id/bookmark", bookmarkPost);
+app.get("/:id/bookmark", bookmarkPost);
 
 export default app;
