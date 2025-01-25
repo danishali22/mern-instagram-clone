@@ -6,6 +6,7 @@ import Signup from './components/Signup';
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Profile from './components/Profile';
 import EditProfile from './components/EditProfile';
+import Chat from './components/Chat';
 
 const browserRouter = createBrowserRouter([
   {
@@ -23,6 +24,10 @@ const browserRouter = createBrowserRouter([
       {
         path: "/account/edit",
         element: <EditProfile />
+      },
+      {
+        path: "/chat",
+        element: <Chat />
       },
     ]
   },
