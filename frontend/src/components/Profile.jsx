@@ -1,5 +1,5 @@
 import useGetUserProfile from "@/hooks/useGetUserProfile"
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {useParams} from "react-router-dom";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
@@ -9,16 +9,58 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import { MessageCircle } from "lucide-react";
 import {Link} from "react-router-dom"
+import { toast } from "sonner";
+import { axiosInstance } from "@/lib/utils";
+import { setAuthUser, setUserProfile } from "@/redux/authSlice";
 
 const Profile = () => {
   const params = useParams();
   const userId = params.id
   useGetUserProfile(userId);
+  const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("posts");
 
   const {userProfile, user} = useSelector((store) => store.auth);
   const isLoggedInUserProfile = userProfile?._id === user?._id;
-  const isFollowing = true;
+  const isFollowing = user?.following.includes(userId);
+
+  const followUnfollowUser = async (userId) => {
+      try {
+        const res = await axiosInstance.post(
+          `/user/followorunfollow/${userId}`
+        );
+        if (res.data.success) {
+          let updatedUser;
+          let updatedUserProfile;
+          if(isFollowing){
+            updatedUser = {
+              ...user,
+              following: user.following.filter((id)=> id !== userId)
+            };
+
+            updatedUserProfile = {
+              ...userProfile,
+              followers: userProfile.followers.filter((id) => id !== user?._id),
+            };
+          }
+          else{
+            updatedUser = {
+              ...user,
+              following: [...user.following, userId]
+            };
+            updatedUserProfile = {
+              ...userProfile,
+              followers: [...userProfile.followers, user?._id],
+            };
+          }
+          dispatch(setAuthUser(updatedUser));
+          dispatch(setUserProfile(updatedUserProfile));
+          toast.success(res.data.message);
+        }
+      } catch (error) {
+        console.log("error follow or unfollow user", error);
+      }
+    }
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
@@ -45,13 +87,13 @@ const Profile = () => {
                 <span>{userProfile?.username}</span>
                 {isLoggedInUserProfile ? (
                   <>
-                  <Link to="/account/edit">
-                    <Button
-                      variant="secondary"
-                      className="hover:bg-gray-200 h-8"
-                    >
-                      Edit Profile
-                    </Button>
+                    <Link to="/account/edit">
+                      <Button
+                        variant="secondary"
+                        className="hover:bg-gray-200 h-8"
+                      >
+                        Edit Profile
+                      </Button>
                     </Link>
                     <Button
                       variant="secondary"
@@ -68,11 +110,17 @@ const Profile = () => {
                   </>
                 ) : isFollowing ? (
                   <>
-                    <Button variant="secondary">Unfollow</Button>
+                    <Button
+                      onClick={() => followUnfollowUser(userProfile?._id)}
+                      variant="secondary"
+                    >
+                      Unfollow
+                    </Button>
                     <Button variant="secondary">Message</Button>
                   </>
                 ) : (
                   <Button
+                    onClick={() => followUnfollowUser(userProfile?._id)}
                     variant="secondary"
                     className="bg-[#0095F6] hover:bg-[#3192d2] h-8 text-white"
                   >
@@ -172,7 +220,6 @@ const Profile = () => {
                         <span>{post?.comments?.length}</span>
                       </button>
                     </div>
-
                   </div>
                 </div>
               );

@@ -9,7 +9,6 @@ import {
   MessageCircle,
   MoreHorizontal,
   Send,
-  UserX,
 } from "lucide-react";
 import { useState } from "react";
 import { FaHeart, FaRegHeart } from "react-icons/fa";
@@ -20,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { setAuthUser, setUserProfile } from "@/redux/authSlice";
+import { Link } from "react-router-dom";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
@@ -143,15 +143,19 @@ const Post = ({ post }) => {
     <div className="my-8 w-full max-w-sm mx-auto">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Avatar>
-            <AvatarImage
-              src={post?.author?.profilePicture?.url}
-              alt="User Image"
-            />
-            <AvatarFallback />
-          </Avatar>
+          <Link to={`profile/${post?.author?._id}`}>
+            <Avatar>
+              <AvatarImage
+                src={post?.author?.profilePicture?.url}
+                alt="User Image"
+              />
+              <AvatarFallback />
+            </Avatar>
+          </Link>
           <div className="flex items-center gap-3">
-            <h1>{post.author.username}</h1>
+            <Link to={`profile/${post?.author?._id}`}>
+              <h1>{post.author.username}</h1>
+            </Link>
             {user?._id === post?.author?._id && (
               <Badge variant="secondary">Author</Badge>
             )}
