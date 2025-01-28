@@ -179,7 +179,7 @@ const Profile = () => {
           </section>
         </div>
         {/* all posts here  */}
-        <div className="border-t border-gray-200">
+        <div className="border-t border-gray-200 pl-32 lg:pl-10">
           <div className="flex items-center justify-center gap-10 text-sm">
             <span
               className={`py-3 cursor-pointer ${

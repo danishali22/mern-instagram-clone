@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { toast } from "sonner";
-import { axiosInstance } from "@/lib/utils";
+import { axiosInstance, readFileAsDefaultUrl } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 import { useDispatch } from "react-redux";
 import {useNavigate} from "react-router-dom"
@@ -25,16 +25,22 @@ const EditProfile = () => {
   const dispatch = useDispatch();
   const imageRef = useRef();
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState("");
   const [input, setInput] = useState({
     profilePicture: user?.profilePicture,
     bio: user?.bio,
     gender: user?.gender,
   });
 
-  const fileChangeHandler = (e) => {
-    const file = e.target.files?.[0];
-    if(file) setInput({ ...input, profilePicture: file });
-  }
+  const fileChangeHandler = async (e) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        setInput({ ...input, profilePicture: file });
+        const dataUrl = await readFileAsDefaultUrl(file);
+        setImagePreview(dataUrl);
+      }
+      e.target.value = "";
+    };
 
   const selectChangeHandler = (value) => {
     setInput({...input, gender: value});
@@ -80,10 +86,17 @@ const EditProfile = () => {
         <h1 className="font-bold text-xl">Edit Profile</h1>
         <div className="flex items-center justify-between gap-2 bg-gray-100 rounded-xl p-4">
           <div className="flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src={user?.profilePicture?.url} alt="User Image" />
-              <AvatarFallback />
-            </Avatar>
+            {imagePreview ? (
+              <Avatar>
+                <AvatarImage src={imagePreview} alt="User Image" />
+                <AvatarFallback />
+              </Avatar>
+            ) : (
+              <Avatar>
+                <AvatarImage src={user?.profilePicture?.url} alt="User Image" />
+                <AvatarFallback />
+              </Avatar>
+            )}
             <div>
               <h1 className="text-sm font-semibold"> {user?.username} </h1>
               <span className="text-gray-600">
