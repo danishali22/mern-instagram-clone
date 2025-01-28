@@ -5,13 +5,43 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import { axiosInstance } from "@/lib/utils";
+import { setAuthUser, setUserProfile } from "@/redux/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 
 const Followers = ({ userProfile }) => {
-    const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const dispatch = useDispatch();
 
-    const filterFollowers = userProfile?.followers.filter((user)=> 
-        user.username.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+  const { user } = useSelector((store) => store.auth);
+
+  const followUser = async (follower) => {
+      try {
+        const res = await axiosInstance.post(
+          `/user/followorunfollow/${follower._id}`
+        );
+        if (res.data.success) {
+            const updatedUser = {
+              ...user,
+              following: [...user.following, follower._id],
+            };
+            const updatedUserProfile = {
+              ...userProfile,
+              following: [...userProfile.following, follower],
+            };
+          dispatch(setAuthUser(updatedUser));
+          dispatch(setUserProfile(updatedUserProfile));
+          toast.success(res.data.message);
+        }
+      } catch (error) {
+        console.log("error follow or unfollow user", error);
+      }
+    }
+
+  const filterFollowers = userProfile?.followers.filter((follower) =>
+    follower.username && follower.username.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div>
@@ -25,30 +55,43 @@ const Followers = ({ userProfile }) => {
             className="pl-10 font-normal focus-visible:ring-transparent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-
           />
         </div>
         {filterFollowers.length > 0 ? (
-          filterFollowers.map((user) => {
-            console.log("user", user);
+          filterFollowers.map((follower) => {
+            const isFollowingUser = userProfile?.following?.some(
+              (followingUser) => followingUser._id === follower?._id
+            );
             return (
               <div
-                key={user?._id}
+                key={follower?._id}
                 className="flex items-center justify-between mt-5"
               >
                 <div className="flex items-center gap-2">
-                  <Link to={`profile/${user?._id}`}>
+                  <Link to={`profile/${follower?._id}`}>
                     <Avatar>
                       <AvatarImage
-                        src={user?.profilePicture?.url}
-                        alt="User Image"
+                        src={follower?.profilePicture?.url}
+                        alt="Follower Image"
                       />
                       <AvatarFallback />
                     </Avatar>
                   </Link>
                   <div>
-                    <p className="font-semibold">{user?.username}</p>
-                    <span className="text-gray-500 text-sm">{user?.bio}</span>
+                    <p className="font-semibold">
+                      {follower?.username}
+                      {!isFollowingUser && (
+                        <span
+                          className="text-[#3BADF8] hover:text-[#3495d6] text-sm font-bold cursor-pointer"
+                          onClick={() => followUser(follower)}
+                        >
+                          <span className="text-black"> .</span> Follow
+                        </span>
+                      )}
+                    </p>
+                    <span className="text-gray-500 text-sm">
+                      {follower?.bio}
+                    </span>
                   </div>
                 </div>
                 <Button variant="secondary" className="hover:bg-gray-200 h-8">
@@ -59,7 +102,7 @@ const Followers = ({ userProfile }) => {
           })
         ) : (
           <p className="text-sm text-gray-500 mt-3">
-            No user found matching &quot;{searchTerm}&quot;.
+            No Follower found matching &quot;{searchTerm}&quot;.
           </p>
         )}
       </div>

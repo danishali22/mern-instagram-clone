@@ -5,11 +5,62 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Link } from "react-router-dom";
 import { Button } from "./ui/button";
 import { useState } from "react";
+import { axiosInstance } from "@/lib/utils";
+import { setAuthUser, setUserProfile } from "@/redux/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { toast } from "sonner";
 
 const Following = ({ userProfile }) => {
   const [searchTerm, setSearchTerm] = useState("");
+const dispatch = useDispatch();
 
-  const filterFollowers = userProfile?.following.filter((user) =>
+const { user } = useSelector((store) => store.auth);
+
+const followOrUnfollowUser = async (following) => {
+   const isFollowing = userProfile?.following?.some(
+     (followingUser) => followingUser._id === following._id
+   );
+  try {
+    const res = await axiosInstance.post(
+      `/user/followorunfollow/${following._id}`
+    );
+    if (res.data.success) {
+      let updatedUser;
+      let updatedUserProfile;
+
+      if (isFollowing){
+        updatedUser = {
+          ...user,
+          following: user.following.filter((id) => id !== following._id),
+        };
+
+        updatedUserProfile = {
+          ...userProfile,
+          following: userProfile.following.filter(
+            (flwuser) => flwuser._id !== following?._id
+          ),
+        };
+      }
+      else {
+        updatedUser = {
+          ...user,
+          following: [...user.following, following._id],
+        };
+        updatedUserProfile = {
+          ...userProfile,
+          following: [...userProfile.following, following],
+        };
+      }
+      dispatch(setAuthUser(updatedUser));
+      dispatch(setUserProfile(updatedUserProfile));
+      toast.success(res.data.message);
+    }
+  } catch (error) {
+    console.log("error follow or unfollow user", error);
+  }
+};
+
+  const filterFollowingUsers = userProfile?.following.filter((user) =>
     user.username.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -27,38 +78,56 @@ const Following = ({ userProfile }) => {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        {filterFollowers.length > 0 ? (
-          filterFollowers.map((user) => {
-            console.log("user", user);
+        {filterFollowingUsers.length > 0 ? (
+          filterFollowingUsers.map((followingUser) => {
+            const isFollowingUser = userProfile?.following?.some(
+              (flwUser) => flwUser._id === followingUser?._id
+            );
             return (
               <div
-                key={user?._id}
+                key={followingUser?._id}
                 className="flex items-center justify-between mt-5"
               >
                 <div className="flex items-center gap-2">
-                  <Link to={`profile/${user?._id}`}>
+                  <Link to={`profile/${followingUser?._id}`}>
                     <Avatar>
                       <AvatarImage
-                        src={user?.profilePicture?.url}
-                        alt="User Image"
+                        src={followingUser?.profilePicture?.url}
+                        alt="Following User Image"
                       />
                       <AvatarFallback />
                     </Avatar>
                   </Link>
                   <div>
-                    <p className="font-semibold">{user?.username}</p>
-                    <span className="text-gray-500 text-sm">{user?.bio}</span>
+                    <p className="font-semibold">{followingUser?.username}</p>
+                    <span className="text-gray-500 text-sm">
+                      {followingUser?.bio}
+                    </span>
                   </div>
                 </div>
-                <Button variant="secondary" className="hover:bg-gray-200 h-8">
-                  Remove
-                </Button>
+                {isFollowingUser ? (
+                  <Button
+                    variant="secondary"
+                    className="hover:bg-gray-200 h-8"
+                    onClick={() => followOrUnfollowUser(followingUser)}
+                  >
+                    Following
+                  </Button>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    className="bg-[#3BADF8] hover:bg-[#3495d6] h-8"
+                    onClick={() => followOrUnfollowUser(followingUser)}
+                  >
+                    Follow
+                  </Button>
+                )}
               </div>
             );
           })
         ) : (
           <p className="text-sm text-gray-500 mt-3">
-            No user found matching &quot;{searchTerm}&quot;.
+            No Following User found matching &quot;{searchTerm}&quot;.
           </p>
         )}
       </div>
