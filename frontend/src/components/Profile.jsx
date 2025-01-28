@@ -12,6 +12,13 @@ import {Link} from "react-router-dom"
 import { toast } from "sonner";
 import { axiosInstance } from "@/lib/utils";
 import { setAuthUser, setUserProfile } from "@/redux/authSlice";
+import Followers from "./Followers";
+import Following from "./Following";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Profile = () => {
   const params = useParams();
@@ -19,6 +26,8 @@ const Profile = () => {
   useGetUserProfile(userId);
   const dispatch = useDispatch();
   const [activeTab, setActiveTab] = useState("posts");
+  const [isOpenFollowers, setIsOpenFollowers] = useState(false);
+  const [isOpenFollowings, setIsOpenFollowings] = useState(false);
 
   const {userProfile, user} = useSelector((store) => store.auth);
   const isLoggedInUserProfile = userProfile?._id === user?._id;
@@ -135,14 +144,20 @@ const Profile = () => {
                   </span>{" "}
                   posts
                 </p>
-                <p>
+                <p
+                  className="cursor-pointer"
+                  onClick={() => setIsOpenFollowers(true)}
+                >
                   <span className="font-semibold">
                     {userProfile?.followers?.length}
                   </span>{" "}
                   followers
                 </p>
-                <p>
-                  <span className="font-semibold">
+                <p
+                  className="cursor-pointer"
+                  onClick={() => setIsOpenFollowings(true)}
+                >
+                  <span className="font-semibold cursor-pointer">
                     {userProfile?.following?.length}
                   </span>{" "}
                   following
@@ -227,6 +242,22 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Followers In Modal */}
+      <Dialog open={isOpenFollowers} onOpenChange={setIsOpenFollowers}>
+        <DialogContent>
+          <DialogTitle className="text-center">Followers</DialogTitle>
+          <Followers userProfile={userProfile} />
+        </DialogContent>
+      </Dialog>
+
+      {/* Following Modal */}
+      <Dialog open={isOpenFollowings} onOpenChange={setIsOpenFollowings}>
+        <DialogContent>
+          <DialogTitle className="text-center">Following</DialogTitle>
+          <Following userProfile={userProfile} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

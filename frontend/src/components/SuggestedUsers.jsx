@@ -61,7 +61,7 @@ const SuggestedUsers = () => {
                   <AvatarFallback />
                 </Avatar>
               </Link>
-              <div className="">
+              <div>
                 <h1 className="text-sm font-semibold">
                   <Link to={`/profile/${suggestedUser?._id}`}>
                     {suggestedUser?.username}

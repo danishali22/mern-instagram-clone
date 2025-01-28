@@ -70,7 +70,17 @@ export const logout = TryCatch(async (req, res, next) => {
 });
 
 export const getProfile = TryCatch(async (req, res, next) => {
-  const user = await User.findById(req.params.id).populate({path: "posts", createdAt: -1}).populate("bookmarks");
+  const user = await User.findById(req.params.id)
+    .populate({ path: "posts", createdAt: -1 })
+    .populate("bookmarks")
+    .populate({
+      path: "followers",
+      select: "username bio profilePicture _id",
+    })
+    .populate({
+      path: "following",
+      select: "username bio profilePicture _id",
+    });
   if (!user) return new ErrorHandler("User not Found", 404);
   return success(res, "Profile fetched successfully", 200, user);
 });
