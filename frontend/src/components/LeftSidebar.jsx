@@ -23,15 +23,19 @@ import CreatePost from "./CreatePost";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { FaInstagram } from "react-icons/fa";
+import { markLikeNotificationAsRead } from "@/redux/rtmSlice";
+import NotificationPopover from "./NotificationPopover";
 
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth);
-  const { likeNotification } = useSelector(
+  const { likeNotification, unreadLikeNotificationCount } = useSelector(
     (store) => store.realTimeNotification
   );
+
+  console.log("Redux State:", likeNotification, unreadLikeNotificationCount);
 
   const [open, setOpen] = useState(false);
 
@@ -118,50 +122,12 @@ const LeftSidebar = () => {
               >
                 {item.icon}
                 <span className="hidden lg:flex">{item.text}</span>
-                {item.text === "Notifications" &&
-                  likeNotification.length > 0 && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          className="rounded-full h-5 w-5 absolute bg-red-600 hover:bg-red-600 left-5 bottom-5"
-                          size="icon"
-                        >
-                          {likeNotification.length}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <div>
-                          {likeNotification.length === 0 ? (
-                            <p>No new Notification</p>
-                          ) : (
-                            likeNotification.map((notification) => (
-                              <div
-                                key={notification?.userId}
-                                className="flex items-center gap-2 my-2"
-                              >
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage
-                                    src={
-                                      notification?.userDetails?.profilePicture
-                                        ?.url
-                                    }
-                                    alt="User Image"
-                                  />
-                                  <AvatarFallback>CN</AvatarFallback>
-                                </Avatar>
-                                <p className="text-sm">
-                                  <span className="font-bold">
-                                    {notification?.userDeatils?.username}{" "}
-                                  </span>
-                                  liked your post
-                                </p>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
+                {item.text === "Notifications" && (
+                  <NotificationPopover
+                    unreadLikeNotificationCount={unreadLikeNotificationCount}
+                    likeNotification={likeNotification}
+                  />
+                )}
               </div>
             );
           })}
@@ -184,50 +150,12 @@ const LeftSidebar = () => {
               >
                 {item.icon}
                 <span className="hidden md:block">{item.text}</span>
-                {item.text === "Notifications" &&
-                  likeNotification.length > 0 && (
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <Button
-                          className="rounded-full h-5 w-5 absolute bg-red-600 hover:bg-red-600 left-5 bottom-5"
-                          size="icon"
-                        >
-                          {likeNotification.length}
-                        </Button>
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <div>
-                          {likeNotification.length === 0 ? (
-                            <p>No new Notification</p>
-                          ) : (
-                            likeNotification.map((notification) => (
-                              <div
-                                key={notification?.userId}
-                                className="flex items-center gap-2 my-2"
-                              >
-                                <Avatar className="w-8 h-8">
-                                  <AvatarImage
-                                    src={
-                                      notification?.userDetails?.profilePicture
-                                        ?.url
-                                    }
-                                    alt="User Image"
-                                  />
-                                  <AvatarFallback>CN</AvatarFallback>
-                                </Avatar>
-                                <p className="text-sm">
-                                  <span className="font-bold">
-                                    {notification?.userDeatils?.username}{" "}
-                                  </span>
-                                  liked your post
-                                </p>
-                              </div>
-                            ))
-                          )}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  )}
+                {item.text === "Notifications" && (
+                  <NotificationPopover
+                    unreadLikeNotificationCount={unreadLikeNotificationCount}
+                    likeNotification={likeNotification}
+                  />
+                )}
               </div>
             );
           })}

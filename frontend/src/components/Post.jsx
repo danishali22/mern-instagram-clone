@@ -194,7 +194,7 @@ const Post = ({ post }) => {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="border border-gray-200 p-4 my-4">
+      <div className="border border-gray-200 px-2 my-4">
         <img
           className="rounded-sm my-2 w-full aspect-square object-cover"
           src={post.image[0].url}
