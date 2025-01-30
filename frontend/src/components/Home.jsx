@@ -13,7 +13,7 @@ const Home = () => {
         <Feed />
         <Outlet />
       </div>
-      <RightSidebar />
+      <RightSidebar className="w-1/4" />
     </div>
   );
 };

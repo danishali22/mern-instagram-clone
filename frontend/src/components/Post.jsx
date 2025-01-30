@@ -194,11 +194,13 @@ const Post = ({ post }) => {
           </DialogContent>
         </Dialog>
       </div>
-      <img
-        className="rounded-sm my-2 w-full aspect-square object-cover"
-        src={post.image[0].url}
-        alt="Post Image"
-      />
+      <div className="border border-gray-200 p-4 my-4">
+        <img
+          className="rounded-sm my-2 w-full aspect-square object-cover"
+          src={post.image[0].url}
+          alt="Post Image"
+        />
+      </div>
       <div className="flex justify-between items-center my-2">
         <div className="flex gap-3 items-center">
           {liked ? (
