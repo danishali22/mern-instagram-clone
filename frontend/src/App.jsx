@@ -1,20 +1,19 @@
-import './App.css'
-import MainLayout from "./components/MainLayout";
+import { useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { io } from 'socket.io-client';
+import './App.css';
+import Chat from './components/Chat';
+import EditProfile from './components/EditProfile';
 import Home from "./components/Home";
 import Login from "./components/Login";
-import Signup from './components/Signup';
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import MainLayout from "./components/MainLayout";
 import Profile from './components/Profile';
-import EditProfile from './components/EditProfile';
-import Chat from './components/Chat';
-import { useEffect } from 'react';
-import { useSelector } from 'react-redux';
-import { io } from 'socket.io-client';
-import { useDispatch } from 'react-redux';
-import { setSocket } from './redux/socketSlice';
-import { setOnlineUsers } from './redux/chatSlice';
-import { setLikeNotification } from './redux/rtmSlice';
 import ProtectedRute from './components/ProtectedRute';
+import Signup from './components/Signup';
+import { setOnlineUsers } from './redux/chatSlice';
+import { setNotification } from './redux/rtmSlice';
+import { setSocket } from './redux/socketSlice';
 
 const browserRouter = createBrowserRouter([
   {
@@ -88,7 +87,8 @@ function App() {
       });
 
       socketio.on("notification", (notification) => {
-        dispatch(setLikeNotification(notification));
+        console.log("notification", notification);
+        dispatch(setNotification(notification));
       });
 
       return () => {

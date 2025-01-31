@@ -91,15 +91,15 @@ export const likePost = TryCatch(async (req, res, next) => {
     if(postOwnerId !== likeUserId){
       
       const notification = {
-        type: 'like',
-        userId: likeUserId,
-        userDeatils: user,
-        postId,
-        message: `${user.username} liked your post.`,
-      }
+        type: "like",
+        user,
+        post,
+        message: `${user.username} like your post.`,
+      };
 
       const postOwnerSocketId = getReceiverSocketId(postOwnerId);
       io.to(postOwnerSocketId).emit("notification", notification);
+      console.log("send");
     }
 
     return success(res, "Post liked", 200);
@@ -122,9 +122,8 @@ export const dislikePost = TryCatch(async (req, res, next) => {
     if (postOwnerId !== likeUserId) {
       const notification = {
         type: "dislike",
-        userId: likeUserId,
-        userDeatils: user,
-        postId,
+        user,
+        post,
         message: `${user.username} disliked your post.`,
       };
 
@@ -157,6 +156,25 @@ export const addComment = TryCatch(async (req, res, next) => {
     post.comments.push(comment._id);
     await post.save();
 
+    const user = await User.findById(commentUserId).select(
+      "username profilePicture"
+    );
+
+    const postOwnerId = post.author.toString();
+
+    if (postOwnerId !== commentUserId) {
+      const notification = {
+        type: "comment",
+        user,
+        post,
+        comment,
+        message: `${user.username} commented on your post.`,
+      };
+
+      const postOwnerSocketId = getReceiverSocketId(postOwnerId);
+      io.to(postOwnerSocketId).emit("notification", notification);
+    }
+      
     return success(res, "Comment Added", 201, comment);
 });
 

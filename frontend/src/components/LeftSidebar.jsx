@@ -1,8 +1,3 @@
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { axiosInstance } from "@/lib/utils";
 import { setAuthUser, setSuggestedUsers, setUserProfile } from "@/redux/authSlice";
 import { setPosts, setSelectedPosts } from "@/redux/postSlice";
@@ -21,23 +16,21 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import CreatePost from "./CreatePost";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Button } from "./ui/button";
 import { FaInstagram } from "react-icons/fa";
-import { markLikeNotificationAsRead } from "@/redux/rtmSlice";
-import NotificationPopover from "./NotificationPopover";
+import Notifications from "./Notifications";
 
 
 const LeftSidebar = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((store) => store.auth);
-  const { likeNotification, unreadLikeNotificationCount } = useSelector(
+  const { unreadNotificationCount } = useSelector(
     (store) => store.realTimeNotification
   );
 
-  console.log("Redux State:", likeNotification, unreadLikeNotificationCount);
-
   const [open, setOpen] = useState(false);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+
 
   const sidebarHandler = async (textType) => {
     if (textType === "Logout") logoutHandler();
@@ -45,6 +38,7 @@ const LeftSidebar = () => {
     else if (textType === "Profile") navigate(`/profile/${user?._id}`);
     else if (textType === "Home") navigate("/");
     else if (textType === "Messages") navigate("/chat");
+    else if (textType === "Notifications") setIsNotificationOpen(!isNotificationOpen);
   };
 
   const logoutHandler = async () => {
@@ -69,7 +63,19 @@ const LeftSidebar = () => {
     { icon: <Search />, text: "Search" },
     { icon: <TrendingUp />, text: "Explore" },
     { icon: <MessageCircle />, text: "Messages" },
-    { icon: <Bell />, text: "Notifications" },
+    {
+      icon: (
+        <>
+          <Bell />
+          {unreadNotificationCount > 0 && (
+            <span className="absolute top-0 left-5 text-xs bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+              {unreadNotificationCount}
+            </span>
+          )}
+        </>
+      ),
+      text: "Notifications",
+    },
     { icon: <PlusSquare />, text: "Create" },
     {
       icon: (
@@ -100,7 +106,19 @@ const LeftSidebar = () => {
   ];
 
   const mobileNavbarItems = [
-    { icon: <Bell />, text: "Notifications" },
+    {
+      icon: (
+        <>
+          <Bell />
+          {unreadNotificationCount > 0 && (
+            <span className="absolute top-0 right-0 text-xs bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center">
+              {unreadNotificationCount}
+            </span>
+          )}
+        </>
+      ),
+      text: "Notifications"
+    },
     { icon: <LogOut />, text: "Logout" },
   ];
   return (
@@ -122,12 +140,6 @@ const LeftSidebar = () => {
               >
                 {item.icon}
                 <span className="hidden lg:flex">{item.text}</span>
-                {item.text === "Notifications" && (
-                  <NotificationPopover
-                    unreadLikeNotificationCount={unreadLikeNotificationCount}
-                    likeNotification={likeNotification}
-                  />
-                )}
               </div>
             );
           })}
@@ -151,9 +163,9 @@ const LeftSidebar = () => {
                 {item.icon}
                 <span className="hidden md:block">{item.text}</span>
                 {item.text === "Notifications" && (
-                  <NotificationPopover
-                    unreadLikeNotificationCount={unreadLikeNotificationCount}
-                    likeNotification={likeNotification}
+                  <Notifications
+                    open={isNotificationOpen}
+                    setOpen={setIsNotificationOpen}
                   />
                 )}
               </div>
@@ -184,6 +196,14 @@ const LeftSidebar = () => {
         </div>
       </div>
       {open && <CreatePost open={open} setOpen={setOpen} />}
+
+      {isNotificationOpen && (
+        <Notifications
+          unreadNotificationCount={unreadNotificationCount}
+          open={isNotificationOpen}
+          setOpen={setIsNotificationOpen}
+        />
+      )}
     </div>
   );
 };
