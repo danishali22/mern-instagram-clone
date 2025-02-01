@@ -5,6 +5,7 @@ import {
   addComment,
   bookmarkPost,
   createPost,
+  deleteComment,
   deletePost,
   dislikePost,
   getAllPosts,
@@ -22,6 +23,7 @@ app.get("/all/user", getUsersPosts);
 app.get("/:id/like", likePost);
 app.get("/:id/dislike", dislikePost);
 app.post("/:id/comment", addComment);
+app.delete("/comment/:id/delete", deleteComment);
 app.get("/:id/comment/all", getCommentsOfPost);
 app.delete("/:id/delete", deletePost);
 app.get("/:id/bookmark", bookmarkPost);

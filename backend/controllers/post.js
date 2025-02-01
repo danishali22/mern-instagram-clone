@@ -134,6 +134,16 @@ export const dislikePost = TryCatch(async (req, res, next) => {
     return success(res, "Post disliked", 200);
 });
 
+export const getCommentsOfPost = TryCatch(async (req, res, next) => {
+  const postId = req.params.id;
+  const comments = await Comment.find({ post: postId }).populate({
+    path: "author",
+    select: "username, profilePicture",
+  });
+  return success(res, "Comments fetched successfully", 200, comments);
+});
+
+
 export const addComment = TryCatch(async (req, res, next) => {
     const commentUserId = req.user;
     const postId = req.params.id;
@@ -178,12 +188,42 @@ export const addComment = TryCatch(async (req, res, next) => {
     return success(res, "Comment Added", 201, comment);
 });
 
-export const getCommentsOfPost = TryCatch(async (req, res, next) => {
-    const postId = req.params.id;
-    const comments = await Comment.find({post: postId}).populate({ path: "author", select: "username, profilePicture" });
-    return success(res, "Comments fetched successfully", 200, comments);    
-});
+export const deleteComment = TryCatch(async (req, res, next) => {
+  const commentUserId = req.user;
+  const commentId = req.params.id;
+  const comment = await Comment.findById(commentId);
+  if (!comment) return next(new ErrorHandler("Comment not found", 404));
+  if(comment.author.toString() !== commentUserId) return next(new ErrorHandler("You are not authorized to delete this comment", 403));
 
+  await Comment.findByIdAndDelete(commentId);
+
+  const post = await Post.findById(comment.post);
+  if(post){
+    post.comments = post.comments.filter((id) => id.toString() !== commentId);
+    await post.save();
+  }
+
+  const user = await User.findById(commentUserId).select(
+    "username profilePicture"
+  );
+
+  const postOwnerId = post.author.toString();
+
+  if (postOwnerId !== commentUserId) {
+    const notification = {
+      type: "delete_comment",
+      user,
+      post,
+      comment,
+      message: `${user.username} delete comment from your post.`,
+    };
+
+    const postOwnerSocketId = getReceiverSocketId(postOwnerId);
+    io.to(postOwnerSocketId).emit("notification", notification);
+  }
+
+  return success(res, "Comment Deleted", 200);
+});
 
 export const deletePost = TryCatch(async (req, res, next) => {
     const postId = req.params.id;

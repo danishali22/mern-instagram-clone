@@ -8,7 +8,6 @@ import {
   markAllNotificationsAsRead,
   deleteAllNotifications,
 } from "@/redux/rtmSlice";
-import { DialogTitle } from "@radix-ui/react-dialog";
 
 const Notifications = ({ open, setOpen }) => {
   const dispatch = useDispatch();
@@ -34,7 +33,6 @@ const Notifications = ({ open, setOpen }) => {
         style={{ transform: open ? "translateX(0)" : "translateX(-100%)" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <DialogTitle></DialogTitle>
         <div className="flex flex-col h-full">
           <div className="flex justify-between mb-4">
             <Button
