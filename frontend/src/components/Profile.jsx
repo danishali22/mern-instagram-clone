@@ -78,11 +78,11 @@ const Profile = () => {
   const displayPost = activeTab === "posts" ? userProfile?.posts : userProfile?.bookmarks
 
   return (
-    <div className="flex justify-center max-w-5xl mx-auto pl-10">
+    <div className="flex justify-center max-w-2xl xl:max-w-4xl lg:max-w-3xl md:max-w-2xl md:pl-[20%] lg:pl-[30%] mx-10 md:mx-2">
       <div className="flex flex-col gap-20 p-8">
-        <div className="grid grid-cols-2">
-          <section className="flex items-center justify-center">
-            <Avatar className="h-32 w-32">
+        <div className="flex flex-col sm:flex-row flex-1 gap-10">
+          <section className="w-1/4 flex items-center justify-start xl:justify-center">
+            <Avatar className="h-24 w-24 sm:h-32 sm:w-32">
               <AvatarImage
                 src={userProfile?.profilePicture?.url}
                 alt="User Image"
@@ -90,7 +90,7 @@ const Profile = () => {
               <AvatarFallback>CN</AvatarFallback>
             </Avatar>
           </section>
-          <section>
+          <section className="w-3/4">
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2">
                 <span>{userProfile?.username}</span>
@@ -179,7 +179,7 @@ const Profile = () => {
           </section>
         </div>
         {/* all posts here  */}
-        <div className="border-t border-gray-200 pl-32 lg:pl-10">
+        <div className="border-t border-gray-200">
           <div className="flex items-center justify-center gap-10 text-sm">
             <span
               className={`py-3 cursor-pointer ${
