@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const commentSchema = new mongoose.Schema(
+const replySchema = new mongoose.Schema(
   {
     text: { type: String, required: true },
     author: {
@@ -8,13 +8,16 @@ const commentSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
-    post: { type: mongoose.Schema.Types.ObjectId, ref: "Post", required: true },
+    comment: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Comment",
+      required: true,
+    },
     likes: [
       { type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true },
     ],
-    replies: [{ type: mongoose.Schema.Types.ObjectId, ref: "Reply" }],
   },
   { timestamps: true }
 );
 
-export const Comment = mongoose.model("Comment", commentSchema);
+export const Reply = mongoose.model("Reply", replySchema);

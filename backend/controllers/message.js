@@ -1,4 +1,5 @@
 import { Message } from "../models/message.js";
+import { User } from "../models/user.js";
 import { Conversation } from "../models/conversation.js";
 import { success, TryCatch } from "../utils/features.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
@@ -6,10 +7,12 @@ import { getReceiverSocketId, io } from "../socket/socket.js";
 export const sendMessage = TryCatch(async (req, res, next) => {
   const senderId = req.user;
   const receiverId = req.params.id;
-  const {message} = req.body;
+  const { message } = req.body;
 
-  let conversation = await Conversation.findOne({participants: {$all : [senderId, receiverId]}});
-  if(!conversation){
+  let conversation = await Conversation.findOne({
+    participants: { $all: [senderId, receiverId] },
+  });
+  if (!conversation) {
     conversation = await Conversation.create({
       participants: [senderId, receiverId],
     });
@@ -18,16 +21,26 @@ export const sendMessage = TryCatch(async (req, res, next) => {
   const newMessage = await Message.create({
     senderId,
     receiverId,
-    message
+    message,
   });
 
-  if(newMessage) conversation.messages.push(newMessage._id);
+  if (newMessage) conversation.messages.push(newMessage._id);
 
   await Promise.all([newMessage.save(), conversation.save()]);
 
+  const senderUser = await User.findById(senderId);
+  const notification = {
+    type: "message",
+    user: senderUser,
+    message: `${senderUser.username} sent you a message.`,
+  };
+
   const receiverSocketId = getReceiverSocketId(receiverId);
-  if(receiverSocketId){
-    io.to(receiverSocketId).emit("newMessage", newMessage);
+  // if (receiverSocketId) io.to(receiverSocketId).emit("newMessage", newMessage); 
+  // else io.to(receiverSocketId).emit("notification", notification);
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit("newMessage", newMessage); 
+    io.to(receiverSocketId).emit("notification", notification); 
   }
 
   return success(res, "Message sent", 201, newMessage);

@@ -5,16 +5,23 @@ import { Button } from "./ui/button";
 import { useSelector } from "react-redux";
 import useGetAllMessages from "@/hooks/useGetAllMessages";
 import useGetRTM from "@/hooks/useGetRTM";
+import { useEffect, useRef } from "react";
 
 const Messages = ({selectedUser}) => {
   useGetRTM();
   useGetAllMessages();
 
-  const {messages} = useSelector((store) => store.chat);
+  const { messages } = useSelector((store) => store.chat);
   const { user } = useSelector((store) => store.auth);
+  const messagesEndRef = useRef(null);
+
+  // Scroll to the bottom whenever messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   return (
-    <div className="overflow-y-auto flex-1 p-4">
+    <div className="flex-1 overflow-y-auto h-[70vh] p-4 pb-20 md:pb-2">
       <div className="flex flex-col items-center justify-center">
         <Avatar className="h-32 w-32">
           <AvatarImage
@@ -26,7 +33,7 @@ const Messages = ({selectedUser}) => {
         <span className="font-bold text-2xl mt-3">
           {selectedUser?.username}
         </span>
-        <Link to={`profile/${selectedUser?._id}`}>
+        <Link to={`/profile/${selectedUser?._id}`}>
           <Button className="h-8 my-2" variant="secondary">
             View Profile
           </Button>
@@ -44,7 +51,9 @@ const Messages = ({selectedUser}) => {
               >
                 <div
                   className={`p-2 rounded max-w-xs break-words ${
-                    msg?.senderId === user?._id ? "bg-blue-500 text-white" : "bg-gray-200 text-black"
+                    msg?.senderId === user?._id
+                      ? "bg-blue-500 text-white"
+                      : "bg-gray-200 text-black"
                   }`}
                 >
                   {msg.message}
@@ -53,6 +62,7 @@ const Messages = ({selectedUser}) => {
             );
           })}
       </div>
+      <div ref={messagesEndRef}></div>
     </div>
   );
 }

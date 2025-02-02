@@ -9,7 +9,7 @@ const rtmSlice = createSlice({
   reducers: {
     // Set a notification (like, follow, comment, etc.)
     setNotification: (state, action) => {
-      const { type, user, post, message, comment } = action.payload;
+      const { type, user, post, comment } = action.payload;
       console.log(action.payload);
 
       // Remove the corresponding notification if it's a "dislike", "unfollow", "delete_comment", or "delete_message"
@@ -80,13 +80,12 @@ const rtmSlice = createSlice({
       );
 
       if (notificationIndex !== -1) {
-        state.notifications[notificationIndex].isRead = true;
+        const notification = state.notifications[notificationIndex];
+        if (!notification.isRead) {
+          notification.isRead = true;
+          state.unreadNotificationCount -= 1; // Decrease unread count
+        }
       }
-
-      // Recalculate unread notification count
-      state.unreadNotificationCount = state.notifications.filter(
-        (notif) => !notif.isRead
-      ).length;
     },
 
     // Mark all notifications as read

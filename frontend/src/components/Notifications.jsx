@@ -23,7 +23,7 @@ const Notifications = ({ open, setOpen }) => {
   };
 
   const handleMarkAsRead = (notificationId) => {
-    dispatch(markNotificationAsRead(notificationId));
+    dispatch(markNotificationAsRead({ id: notificationId }));
   };
 
   return (
