@@ -15,16 +15,23 @@ import { FaHeart, FaRegHeart } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { toast } from "sonner";
 import CommentDialog from "./CommentDialog";
+import { Check, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { setAuthUser, setUserProfile } from "@/redux/authSlice";
 import { Link } from "react-router-dom";
+import { Input } from "./ui/input";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [editCaption, setEditCaption] = useState(post.caption);
+  const [updateLoading, setUpdateLoading] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   const { user, userProfile } = useSelector((store) => store.auth);
   const { posts } = useSelector((store) => store.post);
   const [liked, setLiked] = useState(post.likes.includes(user?._id) || false);
@@ -37,6 +44,32 @@ const Post = ({ post }) => {
     e.preventDefault();
     const inputText = e.target.value;
     inputText.trim() ? setText(inputText) : setText("");
+  };
+
+  const updatePostHandler = async () => {
+    if (!editCaption.trim()) return toast.error("Caption cannot be empty!");
+
+    setUpdateLoading(true);
+    try {
+      const res = await axiosInstance.put(`/post/${post?._id}/update`, {
+        caption: editCaption,
+      });
+
+      if (res.data.success) {
+        const updatedPosts = posts.map((p) =>
+          p._id === post._id ? { ...p, caption: editCaption } : p
+        );
+
+        dispatch(setPosts(updatedPosts));
+        toast.success("Post updated successfully!");
+        setEditMode(false);
+      }
+    } catch (error) {
+      console.error("Error updating post caption", error);
+      toast.error(error.response.data.message);
+    } finally {
+      setUpdateLoading(false);
+    }
   };
 
   const deletePostHandler = async () => {
@@ -161,7 +194,7 @@ const Post = ({ post }) => {
             )}
           </div>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <MoreHorizontal className="cursor-pointer" />
           </DialogTrigger>
@@ -175,21 +208,33 @@ const Post = ({ post }) => {
               </Button>
             )}
             <Button variant="ghost" className="cursor-pointer w-fit">
-              Add to Favouties
+              Add to Favourites
             </Button>
             {user && user?._id === post?.author?._id && (
-              <Button
-                onClick={deletePostHandler}
-                variant="ghost"
-                className="cursor-pointer w-fit"
-                disabled={loading}
-              >
-                {loading ? (
-                  <Loader2 className="animate-spin h-4 w-4" />
-                ) : (
-                  "Delete"
-                )}
-              </Button>
+              <>
+                <Button
+                  onClick={() => {
+                    setEditMode(true);
+                    setDialogOpen(false);
+                  }}
+                  variant="ghost"
+                  className="cursor-pointer w-fit"
+                >
+                  Edit
+                </Button>
+                <Button
+                  onClick={deletePostHandler}
+                  variant="ghost"
+                  className="cursor-pointer w-fit"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin h-4 w-4" />
+                  ) : (
+                    "Delete"
+                  )}
+                </Button>
+              </>
             )}
           </DialogContent>
         </Dialog>
@@ -238,10 +283,32 @@ const Post = ({ post }) => {
         )}
       </div>
       <span className="font-medium mb-2 block">{postLikeCount} Like</span>
-      <p>
-        <span className="font-medium mr-2">{post.author.username}</span>
-        {post?.caption}
-      </p>
+      {/* Edit Caption  */}
+      <div className="flex justify-between items-center gap-2">
+        <div>
+          {editMode ? (
+            <div className="flex items-center gap-2">
+              <Input
+                type="text"
+                value={editCaption}
+                onChange={(e) => setEditCaption(e.target.value)}
+                className="border focus-visible:ring-transparent p-1 rounded-md w-full"
+              />
+              <button onClick={updatePostHandler} disabled={updateLoading}>
+                <Check className="text-green-500 cursor-pointer" />
+              </button>
+              <button onClick={() => setEditMode(false)}>
+                <X className="text-red-500 cursor-pointer" />
+              </button>
+            </div>
+          ) : (
+            <p>
+              <span className="font-medium mr-2">{post.author.username}</span>
+              {post?.caption}
+            </p>
+          )}
+        </div>
+      </div>
 
       {comment.length !== 0 && (
         <span
@@ -256,7 +323,7 @@ const Post = ({ post }) => {
       )}
 
       <CommentDialog open={open} setOpen={setOpen} />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mt-1">
         <input
           type="text"
           placeholder="Write a comment"

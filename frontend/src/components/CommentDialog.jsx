@@ -117,7 +117,7 @@ const CommentDialog = ({ open, setOpen }) => {
                 <input
                   type="text"
                   placeholder="Write a comment..."
-                  className="outline-none w-full border border-gray-300 p-2 rounded"
+                  className="outline-none w-full border border-gray-300 p-2 rounded text-gray-800 text-sm"
                   onChange={changeEventHandler}
                   value={text}
                 />

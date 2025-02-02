@@ -6,6 +6,32 @@ import sharp from "sharp";
 import { v2 as cloudinary } from "cloudinary";
 import { getReceiverSocketId, io } from "../socket/socket.js";
 
+export const getAllPosts = TryCatch(async (req, res, next) => {
+  const posts = await Post.find()
+    .sort({ createdAt: -1 })
+    .populate({ path: "author", select: "-password" })
+    .populate({
+      path: "comments",
+      sort: { createdAt: -1 },
+      populate: { path: "author", select: "username profilePicture" },
+    });
+
+  return success(res, "All posts fetched successfully", 200, posts);
+});
+
+export const getUsersPosts = TryCatch(async (req, res, next) => {
+  const posts = await Post.find({ author: req.user })
+    .sort({ createdAt: -1 })
+    .populate({ path: "author", select: "-password" })
+    .populate({
+      path: "comments",
+      sort: { createdAt: -1 },
+      populate: { path: "author", select: "username profilePicture" },
+    });
+
+  return success(res, "All posts of user fetched successfully", 200, posts);
+});
+
 export const createPost = TryCatch(async (req, res, next) => {
   const { caption } = req.body;
   const image = req.file;
@@ -50,30 +76,58 @@ export const createPost = TryCatch(async (req, res, next) => {
   return success(res, "Post created successfully", 200, post);
 });
 
-export const getAllPosts = TryCatch(async (req, res, next) => {
-   const posts = await Post.find()
-     .sort({ createdAt: -1 })
-     .populate({ path: "author", select: "-password" })
-     .populate({
-       path: "comments",
-       sort: { createdAt: -1 },
-       populate: { path: "author", select: "username profilePicture" },
-     });
+export const updatePost = TryCatch(async (req, res, next) => {
+  console.log("post update");
+  const { id } = req.params;
+  const { caption } = req.body;
+  const userId = req.user;
 
-   return success(res, "All posts fetched successfully", 200, posts);
+  console.log("postId", id);
+  console.log("caption", caption);
+
+  if (!caption) return next(new ErrorHandler("Caption is required", 400));
+
+  const post = await Post.findById(id);
+  if (!post) return next(new ErrorHandler("Post not found", 404));
+
+  if (post.author.toString() !== userId)
+    return next(
+      new ErrorHandler("You are not authorized to update this post", 403)
+    );
+
+  post.caption = caption;
+  await post.save();
+
+  return success(res, "Post updated successfully", 200, post);
 });
 
-export const getUsersPosts = TryCatch(async (req, res, next) => {
-   const posts = await Post.find({author: req.user})
-     .sort({ createdAt: -1 })
-     .populate({ path: "author", select: "-password" })
-     .populate({
-       path: "comments",
-       sort: { createdAt: -1 },
-       populate: { path: "author", select: "username profilePicture" },
-     });
+export const deletePost = TryCatch(async (req, res, next) => {
+    const postId = req.params.id;
+    const authorId = req.user;
+    const post = await Post.findById(postId);
+    if(!post) return next(new ErrorHandler("Post not found", 404));
 
-   return success(res, "All posts of user fetched successfully", 200, posts);
+    if (post.author.toString() !== authorId) return next(new ErrorHandler("You are not authorized to delete this post", 403));
+
+    await Post.findByIdAndDelete(postId);
+
+    // delete all posts from user table
+    const user = await User.findById(authorId);
+    user.posts = user.posts.filter((id) => id.toString() !== postId);
+    await user.save();
+
+    // delete cloudinary image
+    try {
+      await cloudinary.uploader.destroy(post.image[0].public_id);
+    } catch (error) {
+      console.error("Error deleting post image from Cloudinary:", error);
+      return next(new ErrorHandler("Error deleting post image", 500));
+    }
+
+    // delete all comments of posts
+    await Comment.deleteMany({post: postId});
+
+    return success(res, "Post delete successfully", 200);    
 });
 
 export const likePost = TryCatch(async (req, res, next) => {
@@ -132,126 +186,6 @@ export const dislikePost = TryCatch(async (req, res, next) => {
     }
 
     return success(res, "Post disliked", 200);
-});
-
-export const getCommentsOfPost = TryCatch(async (req, res, next) => {
-  const postId = req.params.id;
-  const comments = await Comment.find({ post: postId }).populate({
-    path: "author",
-    select: "username, profilePicture",
-  });
-  return success(res, "Comments fetched successfully", 200, comments);
-});
-
-
-export const addComment = TryCatch(async (req, res, next) => {
-    const commentUserId = req.user;
-    const postId = req.params.id;
-    const {text} = req.body
-    if (!text) return next(new ErrorHandler("Text is required", 400));
-    const post = await Post.findById(postId);
-    if(!post) return next(new ErrorHandler("Post not found", 404));
-
-    let comment = await Comment.create({
-      author: commentUserId,
-      post: postId,
-      text,
-    });
-
-    comment = await comment.populate({
-      path: "author",
-      select: "username profilePicture",
-    });
-
-    post.comments.push(comment._id);
-    await post.save();
-
-    const user = await User.findById(commentUserId).select(
-      "username profilePicture"
-    );
-
-    const postOwnerId = post.author.toString();
-
-    if (postOwnerId !== commentUserId) {
-      const notification = {
-        type: "comment",
-        user,
-        post,
-        comment,
-        message: `${user.username} commented on your post.`,
-      };
-
-      const postOwnerSocketId = getReceiverSocketId(postOwnerId);
-      io.to(postOwnerSocketId).emit("notification", notification);
-    }
-      
-    return success(res, "Comment Added", 201, comment);
-});
-
-export const deleteComment = TryCatch(async (req, res, next) => {
-  const commentUserId = req.user;
-  const commentId = req.params.id;
-  const comment = await Comment.findById(commentId);
-  if (!comment) return next(new ErrorHandler("Comment not found", 404));
-  if(comment.author.toString() !== commentUserId) return next(new ErrorHandler("You are not authorized to delete this comment", 403));
-
-  await Comment.findByIdAndDelete(commentId);
-
-  const post = await Post.findById(comment.post);
-  if(post){
-    post.comments = post.comments.filter((id) => id.toString() !== commentId);
-    await post.save();
-  }
-
-  const user = await User.findById(commentUserId).select(
-    "username profilePicture"
-  );
-
-  const postOwnerId = post.author.toString();
-
-  if (postOwnerId !== commentUserId) {
-    const notification = {
-      type: "delete_comment",
-      user,
-      post,
-      comment,
-      message: `${user.username} delete comment from your post.`,
-    };
-
-    const postOwnerSocketId = getReceiverSocketId(postOwnerId);
-    io.to(postOwnerSocketId).emit("notification", notification);
-  }
-
-  return success(res, "Comment Deleted", 200);
-});
-
-export const deletePost = TryCatch(async (req, res, next) => {
-    const postId = req.params.id;
-    const authorId = req.user;
-    const post = await Post.findById(postId);
-    if(!post) return next(new ErrorHandler("Post not found", 404));
-
-    if (post.author.toString() !== authorId) return next(new ErrorHandler("You are not authorized to delete this post", 403));
-
-    await Post.findByIdAndDelete(postId);
-
-    // delete all posts from user table
-    const user = await User.findById(authorId);
-    user.posts = user.posts.filter((id) => id.toString() !== postId);
-    await user.save();
-
-    // delete cloudinary image
-    try {
-      await cloudinary.uploader.destroy(post.image[0].public_id);
-    } catch (error) {
-      console.error("Error deleting post image from Cloudinary:", error);
-      return next(new ErrorHandler("Error deleting post image", 500));
-    }
-
-    // delete all comments of posts
-    await Comment.deleteMany({post: postId});
-
-    return success(res, "Post delete successfully", 200);    
 });
 
 export const bookmarkPost = TryCatch(async (req, res, next) => {

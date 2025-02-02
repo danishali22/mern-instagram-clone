@@ -10,6 +10,8 @@ import path from "path";
 // routes
 import userRoutes from "./routes/user.js";
 import postRoutes from "./routes/post.js";
+import commentRoutes from "./routes/comment.js";
+import replyRoutes from "./routes/reply.js";
 import messageRoutes from "./routes/message.js";
 import { errorMiddleware } from "./middlewares/error.js";
 
@@ -40,6 +42,8 @@ cloudinary.config({
 
 app.use("/api/user", userRoutes);
 app.use("/api/post", postRoutes);
+app.use("/api/post", commentRoutes);
+app.use("/api/post/comment", replyRoutes);
 app.use("/api/message", messageRoutes);
 
 app.use(errorMiddleware);
