@@ -126,8 +126,14 @@ const LeftSidebar = () => {
       {/* Desktop Sidebar */}
       <div className="hidden md:flex fixed left-0 top-0 z-10 px-4 border-r border-gray-400 lg:w-[20%] h-screen flex-col">
         <div className="flex flex-col">
-          <FaInstagram className="h-8 w-14 mt-10 mb-7 pr-4 lg:hidden flex" />
-          <h1 className="text-3xl font-bold hidden lg:flex mt-10 mb-7 ">
+          <FaInstagram
+            className="h-8 w-14 mt-10 mb-7 pr-4 lg:hidden flex cursor-pointer"
+            onClick={() => navigate("/")}
+          />
+          <h1
+            className="text-3xl font-bold hidden lg:flex mt-10 mb-7 cursor-pointer"
+            onClick={() => navigate("/")}
+          >
             {" "}
             Instagram{" "}
           </h1>
@@ -149,7 +155,12 @@ const LeftSidebar = () => {
       {/* Mobile Top Navigation */}
       <nav className="border-b border-gray-300 px-6 flex justify-between items-center md:hidden">
         <div className="flex items-center gap-2 sm:text-xl font-bold text-secondary">
-          <span className="text-2xl">Instagram</span>
+          <span
+            className="text-2xl cursor-pointer"
+            onClick={() => navigate("/")}
+          >
+            Instagram
+          </span>
         </div>
 
         <div className="flex items-center gap-4">

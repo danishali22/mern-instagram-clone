@@ -326,7 +326,7 @@ const Post = ({ post }) => {
       <div className="flex items-center justify-between mt-1">
         <input
           type="text"
-          placeholder="Write a comment"
+          placeholder="Add a comment..."
           value={text}
           onChange={changeEventHandler}
           className="outline-none w-full text-sm"

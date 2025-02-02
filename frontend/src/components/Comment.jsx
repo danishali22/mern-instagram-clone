@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Input } from "./ui/input";
 import { FaHeart } from "react-icons/fa";
+import Reply from "./Reply";
 
 const Comment = ({ comment }) => {
   const dispatch = useDispatch();
@@ -29,6 +30,8 @@ const Comment = ({ comment }) => {
   const [commentLikeCount, setCommentLikeCount] = useState(
     comment.likes.length
   );
+  const [showReplyInput, setShowReplyInput] = useState(null); // Track which comment has the reply input visible
+  const [replyText, setReplyText] = useState(""); // To handle reply text
 
   const isAuthoirzed = user?._id === comment?.author?._id;
 
@@ -121,7 +124,35 @@ const Comment = ({ comment }) => {
         toast.success(res.data.message);
       }
     } catch (error) {
-      console.log("Error perform action on this post", error);
+      console.log("Error performing action on this post", error);
+      toast.error(error.response.data.message);
+    }
+  };
+
+  const handleReply = async () => {
+    if (!replyText.trim()) return toast.error("Reply cannot be empty!");
+    try {
+      const res = await axiosInstance.post(
+        `/post/comment/${comment?._id}/reply`,
+        { text: replyText }
+      );
+      if (res.data.success) {
+        setReplyText(""); // Clear reply input after submitting
+        setShowReplyInput(null); // Hide reply input
+        toast.success(res.data.message);
+        // Update the selected post with the new reply
+        const updatedCommentData = {
+          ...selectedPost,
+          comments: selectedPost.comments.map((cmnt) =>
+            cmnt._id === comment._id
+              ? { ...cmnt, replies: [...cmnt.replies, res.data.reply] }
+              : cmnt
+          ),
+        };
+        dispatch(setSelectedPosts(updatedCommentData));
+      }
+    } catch (error) {
+      console.log("Error replying to comment", error);
       toast.error(error.response.data.message);
     }
   };
@@ -181,9 +212,38 @@ const Comment = ({ comment }) => {
             </span>
           )}
 
-          <span className="cursor-pointer" onClick={likeOrDislikeComment}>
+          <span
+            className="cursor-pointer"
+            onClick={() =>
+              setShowReplyInput(
+                showReplyInput === comment._id ? null : comment._id
+              )
+            }
+          >
             Reply
           </span>
+
+          {/* Show Reply Input only for the selected comment */}
+          {showReplyInput === comment._id && (
+            <div className="reply-input">
+              <input
+                type="text"
+                placeholder="Write a reply..."
+                value={replyText}
+                onChange={(e) => setReplyText(e.target.value)}
+              />
+              <button onClick={handleReply}>Send</button>
+            </div>
+          )}
+
+          {/* Display replies */}
+          {comment?.replies?.map((reply) => (
+            <div key={reply._id} className="reply">
+              <span>{reply?.author?.username}</span>
+              <p>{reply.text}</p>
+            </div>
+          ))}
+
           <span>
             {isAuthoirzed && (
               <Dialog open={openDialog} onOpenChange={setOpenDialog}>
