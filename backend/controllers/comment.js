@@ -8,7 +8,7 @@ export const getCommentsOfPost = TryCatch(async (req, res, next) => {
   const postId = req.params.id;
   const comments = await Comment.find({ post: postId }).populate({
     path: "author",
-    select: "username, profilePicture",
+    select: "username profilePicture",
   });
   return success(res, "Comments fetched successfully", 200, comments);
 });
@@ -116,4 +116,62 @@ export const deleteComment = TryCatch(async (req, res, next) => {
   }
 
   return success(res, "Comment Deleted", 200);
+});
+
+export const likeComment = TryCatch(async (req, res, next) => {
+  const likeUserId = req.user;
+  const commentId = req.params.id;
+  const comment = await Comment.findById(commentId);
+  if (!comment) return next(new ErrorHandler("Comment not found", 404));
+
+  await comment.updateOne({ $addToSet: { likes: likeUserId } });
+  await comment.save();
+
+  const user = await User.findById(likeUserId).select(
+    "username profilePicture"
+  );
+  const commentOwnerId = comment.author.toString();
+
+  if (commentOwnerId !== likeUserId) {
+    const notification = {
+      type: "like_comment",
+      user,
+      comment,
+      message: `${user.username} liked your comment.`,
+    };
+
+    const commentOwnerSocketId = getReceiverSocketId(commentOwnerId);
+    io.to(commentOwnerSocketId).emit("notification", notification);
+  }
+
+  return success(res, "Comment liked", 200);
+});
+
+export const dislikeComment = TryCatch(async (req, res, next) => {
+  const likeUserId = req.user;
+  const commentId = req.params.id;
+  const comment = await Comment.findById(commentId);
+  if (!comment) return next(new ErrorHandler("Comment not found", 404));
+
+  await comment.updateOne({ $pull: { likes: likeUserId } });
+  await comment.save();
+
+  const user = await User.findById(likeUserId).select(
+    "username profilePicture"
+  );
+  const commentOwnerId = comment.author.toString();
+
+  if (commentOwnerId !== likeUserId) {
+    const notification = {
+      type: "dislike_comment",
+      user,
+      comment,
+      message: `${user.username} disliked your comment.`,
+    };
+
+    const commentOwnerSocketId = getReceiverSocketId(commentOwnerId);
+    io.to(commentOwnerSocketId).emit("notification", notification);
+  }
+
+  return success(res, "Comment disliked", 200);
 });

@@ -20,8 +20,8 @@ app.get("/all/user", getUsersPosts);
 app.post("/new", upload.single("image"), createPost);
 app.put("/:id/update", updatePost);
 app.delete("/:id/delete", deletePost);
-app.get("/:id/like", likePost);
-app.get("/:id/dislike", dislikePost);
+app.put("/:id/like", likePost);
+app.put("/:id/dislike", dislikePost);
 app.get("/:id/bookmark", bookmarkPost);
 
 export default app;

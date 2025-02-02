@@ -95,7 +95,7 @@ const Post = ({ post }) => {
   const likeOrDislikePostHandler = async () => {
     try {
       const action = liked ? "dislike" : "like";
-      const res = await axiosInstance.get(`/post/${post?._id}/${action}`);
+      const res = await axiosInstance.put(`/post/${post?._id}/${action}`);
       if (res.data.success) {
         const updatedLikes = liked ? postLikeCount - 1 : postLikeCount + 1;
         setPostLikeCount(updatedLikes);

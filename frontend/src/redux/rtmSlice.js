@@ -7,16 +7,21 @@ const rtmSlice = createSlice({
     unreadNotificationCount: 0,
   },
   reducers: {
-    // Set a notification (like, follow, comment, etc.)
+    // Set a notification (like, follow, comment, reply, etc.)
     setNotification: (state, action) => {
-      const { type, user, post, comment } = action.payload;
+      const { type, user, post, comment, reply } = action.payload;
       console.log(action.payload);
 
-      // Remove the corresponding notification if it's a "dislike", "unfollow", "delete_comment", or "delete_message"
+      // Remove the corresponding notification if it's a "dislike", "unfollow", "delete_comment", "delete_message"
       if (
-        ["dislike", "unfollow", "delete_comment", "delete_message"].includes(
-          type
-        )
+        [
+          "dislike",
+          "unfollow",
+          "delete_comment",
+          "delete_message",
+          "dislike_reply",
+          "dislike_comment",
+        ].includes(type)
       ) {
         state.notifications = state.notifications.filter((item) => {
           // Remove like on dislike
@@ -56,10 +61,28 @@ const rtmSlice = createSlice({
           ) {
             return false;
           }
+          // Remove like on dislike_reply
+          if (
+            type === "dislike_reply" &&
+            item.type === "like_reply" &&
+            item.user?._id === user?._id &&
+            item.reply?._id === reply?._id
+          ) {
+            return false;
+          }
+          // Remove like on dislike_comment
+          if (
+            type === "dislike_comment" &&
+            item.type === "like_comment" &&
+            item.user?._id === user?._id &&
+            item.comment?._id === comment?._id
+          ) {
+            return false;
+          }
           return true;
         });
       } else {
-        // Add notification for like, follow, comment, message
+        // Add notification for like, follow, comment, reply, message
         state.notifications.unshift({
           ...action.payload,
           isRead: false,

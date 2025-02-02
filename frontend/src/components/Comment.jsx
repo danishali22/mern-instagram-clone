@@ -7,24 +7,29 @@ import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { axiosInstance } from "@/lib/utils";
 import { Check, Heart, Loader2, MoreHorizontal, X } from "lucide-react";
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Input } from "./ui/input";
+import { FaHeart } from "react-icons/fa";
 
 const Comment = ({ comment }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { selectedPost } = useSelector((store) => store.post);
+
   const [editLoading, setEditLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editComment, setEditComment] = useState(comment.text);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [liked, setLiked] = useState(
+    comment.likes.includes(user?._id) || false
+  );
+  const [commentLikeCount, setCommentLikeCount] = useState(
+    comment.likes.length
+  );
+
   const isAuthoirzed = user?._id === comment?.author?._id;
 
   const commentsEndRef = useRef(null);
@@ -37,13 +42,16 @@ const Comment = ({ comment }) => {
     if (!editComment.trim()) return toast.error("Comment cannot be empty!");
     setEditLoading(true);
     try {
-      const res = await axiosInstance.put(`/post/comment/${comment?._id}/update`, {text: editComment});
-      if(res.data.success){
+      const res = await axiosInstance.put(
+        `/post/comment/${comment?._id}/update`,
+        { text: editComment }
+      );
+      if (res.data.success) {
         const updatedCommentData = {
           ...selectedPost,
           comments: selectedPost.comments.map((cmnt) =>
-            cmnt._id === comment._id ? { ...cmnt,  text: editComment } : cmnt
-          )
+            cmnt._id === comment._id ? { ...cmnt, text: editComment } : cmnt
+          ),
         };
         dispatch(setSelectedPosts(updatedCommentData));
         setEditMode(false);
@@ -55,7 +63,7 @@ const Comment = ({ comment }) => {
     } finally {
       setEditLoading(false);
     }
-  }
+  };
 
   const handleDelete = async () => {
     setDeleteLoading(true);
@@ -80,6 +88,41 @@ const Comment = ({ comment }) => {
     } finally {
       setDeleteLoading(false);
       setOpenDialog(false);
+    }
+  };
+
+  const likeOrDislikeComment = async () => {
+    try {
+      const action = liked ? "dislike" : "like";
+      const res = await axiosInstance.put(
+        `/post/comment/${comment?._id}/${action}`
+      );
+      if (res.data.success) {
+        const updatedCommentLikes = liked
+          ? commentLikeCount - 1
+          : commentLikeCount + 1;
+        setCommentLikeCount(updatedCommentLikes);
+        setLiked(!liked);
+
+        const updatedCommentData = {
+          ...selectedPost,
+          comments: selectedPost.comments.map((cmnt) =>
+            cmnt._id === comment._id
+              ? {
+                  ...cmnt,
+                  likes: liked
+                    ? cmnt.likes.filter((id) => id !== user?._id)
+                    : [...cmnt.likes, user?._id],
+                }
+              : cmnt
+          ),
+        };
+        dispatch(setSelectedPosts(updatedCommentData));
+        toast.success(res.data.message);
+      }
+    } catch (error) {
+      console.log("Error perform action on this post", error);
+      toast.error(error.response.data.message);
     }
   };
 
@@ -109,7 +152,7 @@ const Comment = ({ comment }) => {
                   <Check className="text-green-500 cursor-pointer" />
                 </button>
                 <button onClick={() => setEditMode(false)}>
-                  <X className="text-red-500 cursor-pointer" />
+                  <X className="text-red-600 cursor-pointer" />
                 </button>
               </div>
             ) : (
@@ -117,11 +160,30 @@ const Comment = ({ comment }) => {
             )}
           </div>
           <div>
-            <Heart className="h-4 w-4" />
+            {liked ? (
+              <FaHeart
+                className="h-4 w-4 cursor-pointer text-red-500"
+                onClick={likeOrDislikeComment}
+              />
+            ) : (
+              <Heart
+                className="h-4 w-4 cursor-pointer"
+                onClick={likeOrDislikeComment}
+              />
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
-          <span>56m</span> <span>2 likes</span> <span>Reply</span>{" "}
+          <span>56m</span>
+          {commentLikeCount > 0 && (
+            <span>
+              {commentLikeCount} {commentLikeCount === 1 ? "like" : "likes"}
+            </span>
+          )}
+
+          <span className="cursor-pointer" onClick={likeOrDislikeComment}>
+            Reply
+          </span>
           <span>
             {isAuthoirzed && (
               <Dialog open={openDialog} onOpenChange={setOpenDialog}>

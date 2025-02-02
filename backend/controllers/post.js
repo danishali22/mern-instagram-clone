@@ -102,32 +102,41 @@ export const updatePost = TryCatch(async (req, res, next) => {
 });
 
 export const deletePost = TryCatch(async (req, res, next) => {
-    const postId = req.params.id;
-    const authorId = req.user;
-    const post = await Post.findById(postId);
-    if(!post) return next(new ErrorHandler("Post not found", 404));
+  const postId = req.params.id;
+  const authorId = req.user;
+  const post = await Post.findById(postId);
+  if (!post) return next(new ErrorHandler("Post not found", 404));
 
-    if (post.author.toString() !== authorId) return next(new ErrorHandler("You are not authorized to delete this post", 403));
+  if (post.author.toString() !== authorId)
+    return next(
+      new ErrorHandler("You are not authorized to delete this post", 403)
+    );
 
-    await Post.findByIdAndDelete(postId);
+  await Post.findByIdAndDelete(postId);
 
-    // delete all posts from user table
-    const user = await User.findById(authorId);
-    user.posts = user.posts.filter((id) => id.toString() !== postId);
-    await user.save();
+  // delete all posts from user table
+  const user = await User.findById(authorId);
+  user.posts = user.posts.filter((id) => id.toString() !== postId);
+  await user.save();
 
-    // delete cloudinary image
-    try {
-      await cloudinary.uploader.destroy(post.image[0].public_id);
-    } catch (error) {
-      console.error("Error deleting post image from Cloudinary:", error);
-      return next(new ErrorHandler("Error deleting post image", 500));
-    }
+  // delete cloudinary image
+  try {
+    await cloudinary.uploader.destroy(post.image[0].public_id);
+  } catch (error) {
+    console.error("Error deleting post image from Cloudinary:", error);
+    return next(new ErrorHandler("Error deleting post image", 500));
+  }
 
-    // delete all comments of posts
-    await Comment.deleteMany({post: postId});
+  // Delete all comments of the post
+  const comments = await Comment.find({ post: postId });
+  const commentIds = comments.map((comment) => comment._id); // Get all comment IDs
 
-    return success(res, "Post delete successfully", 200);    
+  await Comment.deleteMany({ post: postId });
+
+  // Delete all replies associated with deleted comments
+  await Reply.deleteMany({ comment: { $in: commentIds } });
+
+  return success(res, "Post delete successfully", 200);
 });
 
 export const likePost = TryCatch(async (req, res, next) => {
