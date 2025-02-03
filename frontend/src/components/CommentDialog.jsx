@@ -1,4 +1,4 @@
-import { MoreHorizontal } from "lucide-react";
+import { MoreHorizontal, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Dialog, DialogContent, DialogTrigger } from "./ui/dialog";
 import { Link } from "react-router-dom";
@@ -149,8 +149,8 @@ const CommentDialog = ({ open, setOpen }) => {
             </div>
             <div className="p-4">
               {replyingTo && (
-                <div className="text-xs text-gray-500 mb-1 flex items-center justify-between">
-                  <span>
+                <div className="text-sm bg-gray-200 px-4 py-3 mb-1 flex items-center justify-between">
+                  <span className="text-gray-700">
                     Replying to @
                     {
                       comments.find((c) => c._id === replyingTo)?.author
@@ -159,9 +159,9 @@ const CommentDialog = ({ open, setOpen }) => {
                   </span>
                   <button
                     onClick={() => {setReplyingTo(null); setText("")}}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 hover:text-gray-700"
                   >
-                    × Cancel
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               )}

@@ -130,12 +130,15 @@ export const likeComment = TryCatch(async (req, res, next) => {
   const user = await User.findById(likeUserId).select(
     "username profilePicture"
   );
+  const post = await Post.findById(comment.post);
+
   const commentOwnerId = comment.author.toString();
 
   if (commentOwnerId !== likeUserId) {
     const notification = {
       type: "like_comment",
       user,
+      post,
       comment,
       message: `${user.username} liked your comment.`,
     };
@@ -159,12 +162,15 @@ export const dislikeComment = TryCatch(async (req, res, next) => {
   const user = await User.findById(likeUserId).select(
     "username profilePicture"
   );
+  const post = await Post.findById(comment.post);
+
   const commentOwnerId = comment.author.toString();
 
   if (commentOwnerId !== likeUserId) {
     const notification = {
       type: "dislike_comment",
       user,
+      post,
       comment,
       message: `${user.username} disliked your comment.`,
     };

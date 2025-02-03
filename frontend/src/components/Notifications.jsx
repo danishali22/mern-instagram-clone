@@ -12,7 +12,7 @@ import {
 const Notifications = ({ open, setOpen }) => {
   const dispatch = useDispatch();
 
-  const {notifications } = useSelector((store)=>store.realTimeNotification);
+  const { notifications } = useSelector((store) => store.realTimeNotification);
 
   const handleMarkAllAsRead = () => {
     dispatch(markAllNotificationsAsRead());
@@ -23,6 +23,7 @@ const Notifications = ({ open, setOpen }) => {
   };
 
   const handleMarkAsRead = (notificationId) => {
+    console.log("noti id", notificationId);
     dispatch(markNotificationAsRead({ id: notificationId }));
   };
 
@@ -79,12 +80,20 @@ const Notifications = ({ open, setOpen }) => {
                       <span className="font-bold">
                         {notification?.user?.username}
                       </span>{" "}
-                      {notification.type === "like" && "liked your post"}
+                      {notification.type === "like" &&
+                        `${notification.user.username} liked your post`}
+                      {notification.type === "like_comment" &&
+                        `${notification.user.username} liked your comment: "${notification.comment.text}"`}
+                      {notification.type === "like_reply" &&
+                        `${notification.user.username} liked your reply: "${notification.reply.text}"`}
                       {notification.type === "comment" &&
-                        "commented: " + notification?.comment?.text}
+                        `${notification.user.username} commented: "${notification.comment.text}"`}
+                      {notification.type === "reply" &&
+                        `${notification.user.username} replied to your comment: "${notification.reply.text}"`}
                       {notification.type === "follow" &&
-                        "started following you"}
-                      {notification.type === "message" && "sent you a message"}
+                        `${notification.user.username} started following you`}
+                      {notification.type === "message" &&
+                        `${notification.user.username} sent you a message`}
                     </p>
                   </div>
                   {notification?.post && (

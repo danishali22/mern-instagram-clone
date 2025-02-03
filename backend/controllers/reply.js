@@ -55,6 +55,7 @@ export const addReply = TryCatch(async (req, res, next) => {
       user,
       post,
       comment,
+      reply,
       message: `${user.username} replied on your comment.`,
     };
 
@@ -138,12 +139,10 @@ export const likeReply = TryCatch(async (req, res, next) => {
   const reply = await Reply.findById(replyId);
   if (!reply) return next(new ErrorHandler("Reply not found", 404));
 
-  // Check if the user already liked the reply
   if (reply.likes.includes(likeUserId)) {
     return next(new ErrorHandler("You already liked this reply", 400));
   }
 
-  // Add the user to the likes array of the reply
   await reply.updateOne({ $addToSet: { likes: likeUserId } });
   await reply.save();
 
@@ -151,14 +150,17 @@ export const likeReply = TryCatch(async (req, res, next) => {
     "username profilePicture"
   );
 
+  
   const comment = await Comment.findById(reply.comment);
   const postOwnerId = comment.author.toString();
   const replyOwnerId = reply.author.toString();
+  const post = await Post.findById(comment.post);
 
   if (postOwnerId !== likeUserId && replyOwnerId !== likeUserId) {
     const notification = {
       type: "like_reply",
       user,
+      post,
       reply,
       message: `${user.username} liked your reply.`,
     };
@@ -177,12 +179,10 @@ export const dislikeReply = TryCatch(async (req, res, next) => {
   const reply = await Reply.findById(replyId);
   if (!reply) return next(new ErrorHandler("Reply not found", 404));
 
-  // Check if the user has already liked the reply
   if (!reply.likes.includes(dislikeUserId)) {
     return next(new ErrorHandler("You have not liked this reply yet", 400));
   }
 
-  // Remove the user from the likes array of the reply
   await reply.updateOne({ $pull: { likes: dislikeUserId } });
   await reply.save();
 
@@ -190,15 +190,17 @@ export const dislikeReply = TryCatch(async (req, res, next) => {
     "username profilePicture"
   );
 
-  // Notify the author of the comment being replied to (optional, can be extended to reply author)
+  
   const comment = await Comment.findById(reply.comment);
   const postOwnerId = comment.author.toString();
   const replyOwnerId = reply.author.toString();
-
+  const post = await Post.findById(comment.post);
+  
   if (postOwnerId !== dislikeUserId && replyOwnerId !== dislikeUserId) {
     const notification = {
       type: "dislike_reply",
       user,
+      post,
       reply,
       message: `${user.username} disliked your reply.`,
     };

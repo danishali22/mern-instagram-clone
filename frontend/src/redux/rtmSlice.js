@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { v4 as uuidv4 } from "uuid";
 
 const rtmSlice = createSlice({
   name: "realTimeNotification",
@@ -96,6 +97,7 @@ const rtmSlice = createSlice({
         // Add notification for like, follow, comment, reply, message
         state.notifications.unshift({
           ...action.payload,
+          id: uuidv4(),
           isRead: false,
         });
       }
