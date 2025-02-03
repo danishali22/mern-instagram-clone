@@ -14,7 +14,7 @@ const replySchema = new mongoose.Schema(
       required: true,
     },
     likes: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "User", unique: true },
+      { type: mongoose.Schema.Types.ObjectId, ref: "User" },
     ],
   },
   { timestamps: true }

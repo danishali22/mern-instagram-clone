@@ -1,70 +1,52 @@
 /* eslint-disable react/prop-types */
-
-import { setSelectedPosts } from "@/redux/postSlice";
+import { useState } from "react";
+import { Heart, MoreHorizontal, Loader2, Check, X } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
-import { axiosInstance } from "@/lib/utils";
-import { Check, Heart, Loader2, MoreHorizontal, X } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { DialogTitle } from "@radix-ui/react-dialog";
-import { Input } from "./ui/input";
-import { FaHeart } from "react-icons/fa";
+import { axiosInstance } from "@/lib/utils";
+import { toast } from "sonner";
+import { setSelectedPosts } from "@/redux/postSlice";
 import Reply from "./Reply";
+import { FaHeart } from "react-icons/fa";
 
-const Comment = ({ comment }) => {
+const Comment = ({ comment, onReply }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { selectedPost } = useSelector((store) => store.post);
-
-  const [editLoading, setEditLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editComment, setEditComment] = useState(comment.text);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
-  const [liked, setLiked] = useState(
-    comment.likes.includes(user?._id) || false
-  );
+  const [liked, setLiked] = useState(comment.likes.includes(user?._id));
   const [commentLikeCount, setCommentLikeCount] = useState(
     comment.likes.length
   );
-  const [showReplyInput, setShowReplyInput] = useState(null); // Track which comment has the reply input visible
-  const [replyText, setReplyText] = useState(""); // To handle reply text
-
-  const isAuthoirzed = user?._id === comment?.author?._id;
-
-  const commentsEndRef = useRef(null);
-
-  useEffect(() => {
-    commentsEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [comment]);
+  const isAuthorized = user?._id === comment?.author?._id;
 
   const handleEdit = async () => {
     if (!editComment.trim()) return toast.error("Comment cannot be empty!");
-    setEditLoading(true);
     try {
       const res = await axiosInstance.put(
-        `/post/comment/${comment?._id}/update`,
-        { text: editComment }
+        `/post/comment/${comment._id}/update`,
+        {
+          text: editComment,
+        }
       );
       if (res.data.success) {
-        const updatedCommentData = {
+        const updatedPost = {
           ...selectedPost,
-          comments: selectedPost.comments.map((cmnt) =>
-            cmnt._id === comment._id ? { ...cmnt, text: editComment } : cmnt
+          comments: selectedPost.comments.map((c) =>
+            c._id === comment._id ? { ...c, text: editComment } : c
           ),
         };
-        dispatch(setSelectedPosts(updatedCommentData));
+        dispatch(setSelectedPosts(updatedPost));
         setEditMode(false);
         toast.success(res.data.message);
       }
     } catch (error) {
-      console.log("Error updating comment", error);
-      toast.error(error.response.data.message);
-    } finally {
-      setEditLoading(false);
+      toast.error(error.response?.data?.message || "Update failed");
     }
   };
 
@@ -72,215 +54,159 @@ const Comment = ({ comment }) => {
     setDeleteLoading(true);
     try {
       const res = await axiosInstance.delete(
-        `/post/comment/${comment?._id}/delete`
+        `/post/comment/${comment._id}/delete`
       );
       if (res.data.success) {
-        const updatedCommentData = {
+        const updatedPost = {
           ...selectedPost,
-          comments: selectedPost.comments.filter(
-            (commentObj) => commentObj._id !== comment._id
-          ),
+          comments: selectedPost.comments.filter((c) => c._id !== comment._id),
         };
-
-        dispatch(setSelectedPosts(updatedCommentData));
-        toast.success("Comment deleted successfully");
+        dispatch(setSelectedPosts(updatedPost));
+        toast.success("Comment deleted");
       }
     } catch (error) {
-      console.error("Failed to delete comment:", error);
-      toast.error("Failed to delete comment");
+      toast.error(error.response?.data?.message || "Delete failed");
     } finally {
       setDeleteLoading(false);
       setOpenDialog(false);
     }
   };
 
-  const likeOrDislikeComment = async () => {
+  const handleLike = async () => {
     try {
       const action = liked ? "dislike" : "like";
       const res = await axiosInstance.put(
-        `/post/comment/${comment?._id}/${action}`
+        `/post/comment/${comment._id}/${action}`
       );
       if (res.data.success) {
-        const updatedCommentLikes = liked
-          ? commentLikeCount - 1
-          : commentLikeCount + 1;
-        setCommentLikeCount(updatedCommentLikes);
         setLiked(!liked);
+        setCommentLikeCount((prev) => (liked ? prev - 1 : prev + 1));
 
-        const updatedCommentData = {
+        const updatedPost = {
           ...selectedPost,
-          comments: selectedPost.comments.map((cmnt) =>
-            cmnt._id === comment._id
-              ? {
-                  ...cmnt,
-                  likes: liked
-                    ? cmnt.likes.filter((id) => id !== user?._id)
-                    : [...cmnt.likes, user?._id],
-                }
-              : cmnt
-          ),
+          comments: selectedPost.comments.map((c) => {
+            if (c._id === comment._id) {
+              return {
+                ...c,
+                likes: liked
+                  ? c.likes.filter((id) => id !== user._id)
+                  : [...c.likes, user._id],
+              };
+            }
+            return c;
+          }),
         };
-        dispatch(setSelectedPosts(updatedCommentData));
-        toast.success(res.data.message);
+        dispatch(setSelectedPosts(updatedPost));
       }
     } catch (error) {
-      console.log("Error performing action on this post", error);
-      toast.error(error.response.data.message);
-    }
-  };
-
-  const handleReply = async () => {
-    if (!replyText.trim()) return toast.error("Reply cannot be empty!");
-    try {
-      const res = await axiosInstance.post(
-        `/post/comment/${comment?._id}/reply`,
-        { text: replyText }
-      );
-      if (res.data.success) {
-        setReplyText(""); // Clear reply input after submitting
-        setShowReplyInput(null); // Hide reply input
-        toast.success(res.data.message);
-        // Update the selected post with the new reply
-        const updatedCommentData = {
-          ...selectedPost,
-          comments: selectedPost.comments.map((cmnt) =>
-            cmnt._id === comment._id
-              ? { ...cmnt, replies: [...cmnt.replies, res.data.reply] }
-              : cmnt
-          ),
-        };
-        dispatch(setSelectedPosts(updatedCommentData));
-      }
-    } catch (error) {
-      console.log("Error replying to comment", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Action failed");
     }
   };
 
   return (
     <div className="flex items-start gap-3 my-2 group p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition">
-      <Avatar>
-        <AvatarImage
-          src={comment.author?.profilePicture?.url}
-          alt="User Image"
-        />
-        <AvatarFallback>
-          {comment.author?.username?.charAt(0).toUpperCase()}
-        </AvatarFallback>
+      <Avatar className="h-8 w-8">
+        <AvatarImage src={comment.author?.profilePicture?.url} />
+        <AvatarFallback>{comment.author.username[0]}</AvatarFallback>
       </Avatar>
-      <div className="w-full flex flex-col">
-        <div className="flex items-center justify-between gap-2">
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
           <div className="text-sm">
-            <span className="font-bold mr-1">{comment.author.username}</span>
+            <span className="font-bold mr-2">{comment.author.username}</span>
             {editMode ? (
-              <div className="flex items-center gap-2">
-                <Input
+              <div className="flex items-center gap-2 mt-1">
+                <input
                   type="text"
                   value={editComment}
                   onChange={(e) => setEditComment(e.target.value)}
+                  className="border rounded px-2 py-1 text-sm"
                 />
-                <button onClick={handleEdit} disabled={editLoading}>
-                  <Check className="text-green-500 cursor-pointer" />
-                </button>
-                <button onClick={() => setEditMode(false)}>
-                  <X className="text-red-600 cursor-pointer" />
-                </button>
+                <Check
+                  className="h-4 w-4 text-green-500 cursor-pointer"
+                  onClick={handleEdit}
+                />
+                <X
+                  className="h-4 w-4 text-red-500 cursor-pointer"
+                  onClick={() => setEditMode(false)}
+                />
               </div>
             ) : (
               <span className="text-gray-800">{comment.text}</span>
             )}
           </div>
-          <div>
+          <button onClick={handleLike} className="ml-2">
             {liked ? (
-              <FaHeart
-                className="h-4 w-4 cursor-pointer text-red-500"
-                onClick={likeOrDislikeComment}
-              />
+              <FaHeart className="h-4 w-4 text-red-500" />
             ) : (
-              <Heart
-                className="h-4 w-4 cursor-pointer"
-                onClick={likeOrDislikeComment}
-              />
+              <Heart className="h-4 w-4 text-gray-600" />
             )}
-          </div>
+          </button>
         </div>
-        <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
-          <span>56m</span>
+        <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+          <span>
+            {new Date(comment.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
           {commentLikeCount > 0 && (
             <span>
-              {commentLikeCount} {commentLikeCount === 1 ? "like" : "likes"}
+              {commentLikeCount}
+              {commentLikeCount > 1 ? "likes" : "like"}{" "}
             </span>
           )}
-
-          <span
-            className="cursor-pointer"
-            onClick={() =>
-              setShowReplyInput(
-                showReplyInput === comment._id ? null : comment._id
-              )
-            }
+          <button
+            onClick={() => onReply(comment._id, comment.author.username)}
+            className="hover:text-gray-700"
           >
             Reply
-          </span>
-
-          {/* Show Reply Input only for the selected comment */}
-          {showReplyInput === comment._id && (
-            <div className="reply-input">
-              <input
-                type="text"
-                placeholder="Write a reply..."
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-              />
-              <button onClick={handleReply}>Send</button>
-            </div>
+          </button>
+          {isAuthorized && (
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+              <DialogTrigger>
+                <MoreHorizontal className="h-4 w-4 cursor-pointer opacity-0 group-hover:opacity-100" />
+              </DialogTrigger>
+              <DialogContent className="max-w-sm flex flex-col items-center">
+                <DialogTitle></DialogTitle>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setEditMode(true);
+                    setOpenDialog(false);
+                  }}
+                  className="cursor-pointer w-fit"
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={handleDelete}
+                  disabled={deleteLoading}
+                  className="cursor-pointer w-fit text-red-500"
+                >
+                  {deleteLoading ? (
+                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                  ) : (
+                    "Delete"
+                  )}
+                </Button>
+              </DialogContent>
+            </Dialog>
           )}
-
-          {/* Display replies */}
-          {comment?.replies?.map((reply) => (
-            <div key={reply._id} className="reply">
-              <span>{reply?.author?.username}</span>
-              <p>{reply.text}</p>
-            </div>
-          ))}
-
-          <span>
-            {isAuthoirzed && (
-              <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                <DialogTrigger asChild>
-                  <MoreHorizontal className="cursor-pointer" />
-                </DialogTrigger>
-                <DialogContent className="max-w-sm flex flex-col items-center">
-                  <DialogTitle></DialogTitle>
-                  <Button
-                    variant="ghost"
-                    onClick={() => {
-                      setEditMode(true);
-                      setOpenDialog(false);
-                    }}
-                    className="cursor-pointer w-fit"
-                  >
-                    Edit
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    onClick={handleDelete}
-                    disabled={deleteLoading}
-                    className="cursor-pointer w-fit"
-                  >
-                    {deleteLoading ? (
-                      <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                    ) : (
-                      "Delete"
-                    )}
-                  </Button>
-                </DialogContent>
-              </Dialog>
-            )}
-          </span>
         </div>
+        {comment.replies?.length > 0 && (
+          <div className="ml-1 mt-2 border-l-2 pl-2">
+            {comment.replies.map((reply) => (
+              <Reply
+                key={reply._id}
+                reply={reply}
+                commentId={comment._id}
+                onReply={onReply}
+              />
+            ))}
+          </div>
+        )}
       </div>
-      <div ref={commentsEndRef}></div>
     </div>
   );
 };

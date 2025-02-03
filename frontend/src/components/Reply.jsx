@@ -1,68 +1,57 @@
 /* eslint-disable react/prop-types */
-
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
-import { axiosInstance } from "@/lib/utils";
-import { Input } from "./ui/input";
-import { Button } from "@/components/ui/button";
-import { FaHeart } from "react-icons/fa";
-import { Check, X, Heart, Loader2, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import { Heart, MoreHorizontal, Loader2, Check, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useDispatch, useSelector } from "react-redux";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { axiosInstance } from "@/lib/utils";
+import { toast } from "sonner";
 import { setSelectedPosts } from "@/redux/postSlice";
-import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
-import { DialogTitle } from "@radix-ui/react-dialog";
+import { FaHeart } from "react-icons/fa";
 
-const Reply = ({ reply, commentId }) => {
+const Reply = ({ reply, commentId, onReply }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const { selectedPost } = useSelector((store) => store.post);
-
-  const [editLoading, setEditLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
-  const [editReply, setEditReply] = useState(reply.text);
+  const [editText, setEditText] = useState(reply.text);
   const [deleteLoading, setDeleteLoading] = useState(false);
-  const [liked, setLiked] = useState(reply.likes.includes(user?._id) || false);
-  const [replyLikeCount, setReplyLikeCount] = useState(reply.likes.length);
   const [openDialog, setOpenDialog] = useState(false);
-
-  const isAuthoirzed = user?._id === reply?.author?._id;
-
-  useEffect(() => {
-    setReplyLikeCount(reply.likes.length);
-    setLiked(reply.likes.includes(user?._id));
-  }, [reply]);
+  const [liked, setLiked] = useState(reply?.likes?.includes(user?._id));
+  const [replyLikeCount, setReplyLikeCount] = useState(reply.likes.length);
+  const isAuthorized = user?._id === reply?.author?._id;
 
   const handleEdit = async () => {
-    if (!editReply.trim()) return toast.error("Reply cannot be empty!");
-    setEditLoading(true);
+    if (!editText.trim()) return toast.error("Reply cannot be empty!");
     try {
       const res = await axiosInstance.put(
-        `/post/comment/reply/${reply?._id}/update`,
-        { text: editReply }
+        `/post/comment/reply/${reply._id}/update`,
+        {
+          text: editText,
+        }
       );
       if (res.data.success) {
-        const updatedPostData = {
+        const updatedPost = {
           ...selectedPost,
-          comments: selectedPost.comments.map((comment) =>
-            comment._id === commentId
-              ? {
-                  ...comment,
-                  replies: comment.replies.map((rpl) =>
-                    rpl._id === reply._id ? { ...rpl, text: editReply } : rpl
-                  ),
-                }
-              : comment
-          ),
+          comments: selectedPost.comments.map((comment) => {
+            if (comment._id === commentId) {
+              return {
+                ...comment,
+                replies: comment.replies.map((r) =>
+                  r._id === reply._id ? { ...r, text: editText } : r
+                ),
+              };
+            }
+            return comment;
+          }),
         };
-        dispatch(setSelectedPosts(updatedPostData));
+        dispatch(setSelectedPosts(updatedPost));
         setEditMode(false);
         toast.success(res.data.message);
       }
     } catch (error) {
-      console.log("Error updating reply", error);
-      toast.error(error.response.data.message);
-    } finally {
-      setEditLoading(false);
+      toast.error(error.response?.data?.message || "Update failed");
     }
   };
 
@@ -70,153 +59,165 @@ const Reply = ({ reply, commentId }) => {
     setDeleteLoading(true);
     try {
       const res = await axiosInstance.delete(
-        `/post/comment/reply/${reply?._id}/delete`
+        `/post/comment/reply/${reply._id}/delete`
       );
       if (res.data.success) {
-        const updatedPostData = {
+        const updatedPost = {
           ...selectedPost,
-          comments: selectedPost.comments.map((comment) =>
-            comment._id === commentId
-              ? {
-                  ...comment,
-                  replies: comment.replies.filter(
-                    (rpl) => rpl._id !== reply._id
-                  ),
-                }
-              : comment
-          ),
+          comments: selectedPost.comments.map((comment) => {
+            if (comment._id === commentId) {
+              return {
+                ...comment,
+                replies: comment.replies.filter((r) => r._id !== reply._id),
+              };
+            }
+            return comment;
+          }),
         };
-        dispatch(setSelectedPosts(updatedPostData));
-        toast.success("Reply deleted successfully");
+        dispatch(setSelectedPosts(updatedPost));
+        toast.success("Reply deleted");
       }
     } catch (error) {
-      console.error("Failed to delete reply:", error);
-      toast.error("Failed to delete reply");
+      toast.error(error.response?.data?.message || "Delete failed");
     } finally {
       setDeleteLoading(false);
       setOpenDialog(false);
     }
   };
 
-  const likeOrDislikeReply = async () => {
+  const handleLike = async () => {
     try {
       const action = liked ? "dislike" : "like";
       const res = await axiosInstance.put(
-        `/post/comment/reply/${reply?._id}/${action}`
+        `/post/comment/reply/${reply._id}/${action}`
       );
       if (res.data.success) {
-        const updatedReplyLikes = liked
-          ? replyLikeCount - 1
-          : replyLikeCount + 1;
-        setReplyLikeCount(updatedReplyLikes);
         setLiked(!liked);
+        setReplyLikeCount((prev) => (liked ? prev - 1 : prev + 1));
 
-        const updatedPostData = {
+        const updatedPost = {
           ...selectedPost,
-          comments: selectedPost.comments.map((comment) =>
-            comment._id === commentId
-              ? {
-                  ...comment,
-                  replies: comment.replies.map((rpl) =>
-                    rpl._id === reply._id
-                      ? {
-                          ...rpl,
-                          likes: liked
-                            ? rpl.likes.filter((id) => id !== user?._id)
-                            : [...rpl.likes, user?._id],
-                        }
-                      : rpl
-                  ),
-                }
-              : comment
-          ),
+          comments: selectedPost.comments.map((comment) => {
+            if (comment._id === commentId) {
+              return {
+                ...comment,
+                replies: comment.replies.map((r) => {
+                  if (r._id === reply._id) {
+                    return {
+                      ...r,
+                      likes: liked
+                        ? r.likes.filter((id) => id !== user._id)
+                        : [...r.likes, user._id],
+                    };
+                  }
+                  return r;
+                }),
+              };
+            }
+            return comment;
+          }),
         };
-        dispatch(setSelectedPosts(updatedPostData));
-        toast.success(res.data.message);
+        dispatch(setSelectedPosts(updatedPost));
       }
     } catch (error) {
-      console.log("Error performing action on reply", error);
-      toast.error(error.response.data.message);
+      toast.error(error.response?.data?.message || "Action failed");
     }
   };
 
   return (
-    <div className="flex items-start gap-3 my-2 p-3 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition">
-      <div className="w-full flex flex-col">
-        <div className="flex items-center justify-between gap-2">
+    <div className="flex items-start gap-3 my-2 group p-2 hover:bg-gray-50 rounded-lg">
+      <Avatar className="h-6 w-6">
+        <AvatarImage src={reply.author?.profilePicture?.url} />
+        <AvatarFallback>{reply.author.username[0]}</AvatarFallback>
+      </Avatar>
+      <div className="flex-1">
+        <div className="flex items-center justify-between">
           <div className="text-sm">
-            <span className="font-bold mr-1">{reply.author.username}</span>
+            <span className="font-bold mr-2">{reply.author.username}</span>
             {editMode ? (
-              <div className="flex items-center gap-2">
-                <Input
+              <div className="flex items-center gap-2 mt-1">
+                <input
                   type="text"
-                  value={editReply}
-                  onChange={(e) => setEditReply(e.target.value)}
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  className="border rounded px-2 py-1 text-sm"
                 />
-                <button onClick={handleEdit} disabled={editLoading}>
-                  <Check className="text-green-500 cursor-pointer" />
-                </button>
-                <button onClick={() => setEditMode(false)}>
-                  <X className="text-red-600 cursor-pointer" />
-                </button>
+                <Check
+                  className="h-4 w-4 text-green-500 cursor-pointer"
+                  onClick={handleEdit}
+                />
+                <X
+                  className="h-4 w-4 text-red-500 cursor-pointer"
+                  onClick={() => setEditMode(false)}
+                />
               </div>
             ) : (
               <span className="text-gray-800">{reply.text}</span>
             )}
           </div>
-          <div>
+          <button onClick={handleLike} className="flex items-center gap-1">
             {liked ? (
-              <FaHeart
-                className="h-4 w-4 cursor-pointer text-red-500"
-                onClick={likeOrDislikeReply}
-              />
+              <FaHeart className="h-3 w-3 text-red-500" />
             ) : (
-              <Heart
-                className="h-4 w-4 cursor-pointer"
-                onClick={likeOrDislikeReply}
-              />
+              <Heart className="h-3 w-3 text-gray-600" />
             )}
-          </div>
+          </button>
         </div>
-        <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
-          <span>56m</span>
+        <div className="flex items-center gap-4 mt-1 text-xs text-gray-500">
+          <span>
+            {new Date(reply.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
           {replyLikeCount > 0 && (
             <span>
-              {replyLikeCount} {replyLikeCount === 1 ? "like" : "likes"}
+              {replyLikeCount}
+              {replyLikeCount > 1 ? "likes" : "like"}{" "}
             </span>
           )}
 
-          {isAuthoirzed && (
-            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-              <DialogTrigger asChild>
-                <MoreHorizontal className="cursor-pointer" />
-              </DialogTrigger>
-              <DialogContent className="max-w-sm flex flex-col items-center">
-                <DialogTitle></DialogTitle>
-                <Button
-                  variant="ghost"
-                  onClick={() => {
-                    setEditMode(true);
-                    setOpenDialog(false);
-                  }}
-                  className="cursor-pointer w-fit"
-                >
-                  Edit
-                </Button>
-                <Button
-                  variant="ghost"
-                  onClick={handleDelete}
-                  disabled={deleteLoading}
-                  className="cursor-pointer w-fit"
-                >
-                  {deleteLoading ? (
-                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
-                  ) : (
-                    "Delete"
-                  )}
-                </Button>
-              </DialogContent>
-            </Dialog>
+          {/* Add Reply button */}
+          <button
+            onClick={() => onReply(reply.comment, reply.author.username)}
+            className="text-xs text-gray-500 hover:text-gray-700"
+          >
+            Reply
+          </button>
+
+          {isAuthorized && (
+            <>
+              <MoreHorizontal
+                className="h-4 w-4 cursor-pointer opacity-0 group-hover:opacity-100"
+                onClick={() => setOpenDialog(true)}
+              />
+              <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                <DialogContent className="max-w-sm flex flex-col items-center">
+                  <Button
+                    variant="ghost"
+                    className="cursor-pointer w-fit"
+                    onClick={() => {
+                      setEditMode(true);
+                      setOpenDialog(false);
+                    }}
+                  >
+                    Edit
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="w-fit cursor-pointer text-red-500"
+                    onClick={handleDelete}
+                    disabled={deleteLoading}
+                  >
+                    {deleteLoading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      "Delete"
+                    )}
+                  </Button>
+                </DialogContent>
+              </Dialog>
+            </>
           )}
         </div>
       </div>

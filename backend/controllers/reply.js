@@ -21,6 +21,8 @@ export const addReply = TryCatch(async (req, res, next) => {
   const commentId = req.params.id;
   const { text } = req.body;
 
+  console.log("body", req.body);
+
   if (!text) return next(new ErrorHandler("Text is required", 400));
 
   const comment = await Comment.findById(commentId);

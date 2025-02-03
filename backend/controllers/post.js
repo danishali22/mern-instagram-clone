@@ -13,7 +13,13 @@ export const getAllPosts = TryCatch(async (req, res, next) => {
     .populate({
       path: "comments",
       sort: { createdAt: -1 },
-      populate: { path: "author", select: "username profilePicture" },
+      populate: [
+        { path: "author", select: "username profilePicture" },
+        {
+          path: "replies",
+          populate: { path: "author", select: "username profilePicture" },
+        },
+      ],
     });
 
   return success(res, "All posts fetched successfully", 200, posts);
