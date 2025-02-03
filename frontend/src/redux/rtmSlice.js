@@ -18,6 +18,7 @@ const rtmSlice = createSlice({
           "dislike",
           "unfollow",
           "delete_comment",
+          "delete_reply",
           "delete_message",
           "dislike_reply",
           "dislike_comment",
@@ -46,6 +47,16 @@ const rtmSlice = createSlice({
           if (
             type === "delete_comment" &&
             item.type === "comment" &&
+            item.user?._id === user?._id &&
+            item.post?._id === post?._id &&
+            item.comment?._id === comment?._id
+          ) {
+            return false;
+          }
+          // Remove reply on delete_reply
+          if (
+            type === "delete_reply" &&
+            item.type === "reply" &&
             item.user?._id === user?._id &&
             item.post?._id === post?._id &&
             item.comment?._id === comment?._id

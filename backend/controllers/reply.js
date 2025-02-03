@@ -1,5 +1,6 @@
 import { Reply } from "../models/reply.js";
 import { Comment } from "../models/comment.js";
+import { Post } from "../models/post.js";
 import { User } from "../models/user.js";
 import { ErrorHandler, success, TryCatch } from "../utils/features.js";
 import { getReceiverSocketId, io } from "../socket/socket.js";
@@ -21,8 +22,6 @@ export const addReply = TryCatch(async (req, res, next) => {
   const commentId = req.params.id;
   const { text } = req.body;
 
-  console.log("body", req.body);
-
   if (!text) return next(new ErrorHandler("Text is required", 400));
 
   const comment = await Comment.findById(commentId);
@@ -41,6 +40,27 @@ export const addReply = TryCatch(async (req, res, next) => {
 
   comment.replies.push(reply._id);
   await comment.save();
+
+  const user = await User.findById(replyUserId).select(
+    "username profilePicture"
+  );
+
+  const post = await Post.findById(comment.post);
+
+  const commentOwnerId = comment.author.toString();
+
+  if (commentOwnerId !== replyUserId) {
+    const notification = {
+      type: "reply",
+      user,
+      post,
+      comment,
+      message: `${user.username} replied on your comment.`,
+    };
+
+    const postOwnerSocketId = getReceiverSocketId(commentOwnerId);
+    io.to(postOwnerSocketId).emit("notification", notification);
+  }
 
   return success(res, "Reply added successfully", 201, reply);
 });
@@ -85,6 +105,27 @@ export const deleteReply = TryCatch(async (req, res, next) => {
   if (comment) {
     comment.replies = comment.replies.filter((id) => id.toString() !== replyId);
     await comment.save();
+  }
+
+  const user = await User.findById(replyUserId).select(
+    "username profilePicture"
+  );
+
+  const post = await Post.findById(comment.post);
+
+  const commentOwnerId = comment.author.toString();
+
+  if (commentOwnerId !== replyUserId) {
+    const notification = {
+      type: "delete_reply",
+      user,
+      post,
+      comment,
+      message: `${user.username} delete reply from your comment.`,
+    };
+
+    const postOwnerSocketId = getReceiverSocketId(commentOwnerId);
+    io.to(postOwnerSocketId).emit("notification", notification);
   }
 
   return success(res, "Reply deleted successfully", 200);
