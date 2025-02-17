@@ -93,7 +93,7 @@ const Profile = () => {
           <section className="w-3/4">
             <div className="flex flex-col gap-5">
               <div className="flex items-center gap-2">
-                <span>{userProfile?.username}</span>
+                <span className="font-semibold">{userProfile?.username}</span>
                 {isLoggedInUserProfile ? (
                   <>
                     <Link to="/account/edit">

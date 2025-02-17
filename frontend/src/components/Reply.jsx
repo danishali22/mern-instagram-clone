@@ -9,6 +9,7 @@ import { axiosInstance } from "@/lib/utils";
 import { toast } from "sonner";
 import { setSelectedPosts } from "@/redux/postSlice";
 import { FaHeart } from "react-icons/fa";
+import { Link } from "react-router-dom";
 
 const Reply = ({ reply, commentId, onReply }) => {
   const dispatch = useDispatch();
@@ -21,6 +22,27 @@ const Reply = ({ reply, commentId, onReply }) => {
   const [liked, setLiked] = useState(reply?.likes?.includes(user?._id));
   const [replyLikeCount, setReplyLikeCount] = useState(reply.likes.length);
   const isAuthorized = user?._id === reply?.author?._id;
+
+  const parseCommentText = (text) => {
+    // This regex finds words starting with @
+    const regex = /(@\w+)/g;
+    const parts = text.split(regex);
+    return parts.map((part, index) => {
+      // If the part matches an @mention, render a clickable Link
+      if (part.match(/^@\w+/)) {
+        return (
+          <span
+            key={index}
+            className="text-blue-500 hover:underline"
+          >
+            {part}
+          </span>
+        );
+      }
+      // Otherwise, render the text normally
+      return <span key={index}>{part}</span>;
+    });
+  };
 
   const handleEdit = async () => {
     if (!editText.trim()) return toast.error("Reply cannot be empty!");
@@ -152,7 +174,9 @@ const Reply = ({ reply, commentId, onReply }) => {
                 />
               </div>
             ) : (
-              <span className="text-gray-800">{reply.text}</span>
+              <span className="text-gray-800">
+                {parseCommentText(reply.text)}
+              </span>
             )}
           </div>
           <button onClick={handleLike} className="flex items-center gap-1">

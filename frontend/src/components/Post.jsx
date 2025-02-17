@@ -22,6 +22,8 @@ import { Badge } from "./ui/badge";
 import { setAuthUser, setUserProfile } from "@/redux/authSlice";
 import { Link } from "react-router-dom";
 import { Input } from "./ui/input";
+import { formatDistanceToNowStrict } from "date-fns";
+import { Dot } from "lucide-react";
 
 const Post = ({ post }) => {
   const [text, setText] = useState("");
@@ -39,6 +41,23 @@ const Post = ({ post }) => {
   const [comment, setComment] = useState(post.comments);
   const dispatch = useDispatch();
   const isBookmarked = user?.bookmarks.includes(post?._id);
+
+  const timeAgo = post.createdAt
+    ? formatDistanceToNowStrict(new Date(post.createdAt), {
+        addSuffix: false,
+        roundingMethod: "floor",
+      })
+        .replace(" minutes", "m")
+        .replace(" minute", "m")
+        .replace(" hours", "h")
+        .replace(" hour", "h")
+        .replace(" days", "d")
+        .replace(" day", "d")
+        .replace(" months", "mo")
+        .replace(" month", "mo")
+        .replace(" years", "y")
+        .replace(" year", "y")
+    : "5d";
 
   const changeEventHandler = (e) => {
     e.preventDefault();
@@ -186,9 +205,13 @@ const Post = ({ post }) => {
             </Avatar>
           </Link>
           <div className="flex items-center gap-3">
-            <Link to={`profile/${post?.author?._id}`}>
-              <h1>{post.author.username}</h1>
-            </Link>
+            <div className="flex items-center">
+              <Link to={`profile/${post?.author?._id}`}>
+                <h1 className="font-bold">{post.author.username}</h1>
+              </Link>
+              <Dot />
+              <span className="text-gray-500 text-sm">{timeAgo}</span>
+            </div>
             {user?._id === post?.author?._id && (
               <Badge variant="secondary">Author</Badge>
             )}
@@ -239,9 +262,9 @@ const Post = ({ post }) => {
           </DialogContent>
         </Dialog>
       </div>
-      <div className="border border-gray-200 px-2 my-4">
+      <div className="border border-gray-200 my-4">
         <img
-          className="rounded-sm my-2 w-full aspect-square object-cover"
+          className="rounded-sm w-full aspect-square object-cover"
           src={post.image[0].url}
           alt="Post Image"
         />

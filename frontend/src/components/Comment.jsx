@@ -225,14 +225,3 @@ const Comment = ({ comment, onReply }) => {
 };
 
 export default Comment;
-
-/*<div className="ml-1 mt-2 border-l-2 pl-2">
-            {comment.replies.map((reply) => (
-              <Reply
-                key={reply._id}
-                reply={reply}
-                commentId={comment._id}
-                onReply={onReply}
-              />
-            ))}
-          </div> */
