@@ -172,12 +172,11 @@ const Reply = ({ reply, commentId, onReply }) => {
           </span>
           {replyLikeCount > 0 && (
             <span>
-              {replyLikeCount}
+              {replyLikeCount} {""}
               {replyLikeCount > 1 ? "likes" : "like"}{" "}
             </span>
           )}
 
-          {/* Add Reply button */}
           <button
             onClick={() => onReply(reply.comment, reply.author.username)}
             className="text-xs text-gray-500 hover:text-gray-700"

@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { setSelectedPosts } from "@/redux/postSlice";
 import Reply from "./Reply";
 import { FaHeart } from "react-icons/fa";
+import { Minus } from "lucide-react";
 
 const Comment = ({ comment, onReply }) => {
   const dispatch = useDispatch();
@@ -19,11 +20,16 @@ const Comment = ({ comment, onReply }) => {
   const [editComment, setEditComment] = useState(comment.text);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openReply, setOpenReply] = useState(false);
   const [liked, setLiked] = useState(comment.likes.includes(user?._id));
   const [commentLikeCount, setCommentLikeCount] = useState(
     comment.likes.length
   );
   const isAuthorized = user?._id === comment?.author?._id;
+
+  const handleOpenReply = () => {
+    setOpenReply(!openReply)
+  }
 
   const handleEdit = async () => {
     if (!editComment.trim()) return toast.error("Comment cannot be empty!");
@@ -151,7 +157,7 @@ const Comment = ({ comment, onReply }) => {
           </span>
           {commentLikeCount > 0 && (
             <span>
-              {commentLikeCount}
+              {commentLikeCount} {""}
               {commentLikeCount > 1 ? "likes" : "like"}{" "}
             </span>
           )}
@@ -195,7 +201,32 @@ const Comment = ({ comment, onReply }) => {
           )}
         </div>
         {comment.replies?.length > 0 && (
-          <div className="ml-1 mt-2 border-l-2 pl-2">
+          <>
+            <span className="flex items-center justify-start text-xs gap-2 mt-1 text-gray-500 cursor-pointer" onClick={handleOpenReply}>
+              <Minus /> View replies ({comment.replies?.length})
+            </span>
+            {openReply && (
+              <div className="ml-1 mt-2 border-l-2 pl-2">
+                {comment.replies.map((reply) => (
+                  <Reply
+                    key={reply._id}
+                    reply={reply}
+                    commentId={comment._id}
+                    onReply={onReply}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default Comment;
+
+/*<div className="ml-1 mt-2 border-l-2 pl-2">
             {comment.replies.map((reply) => (
               <Reply
                 key={reply._id}
@@ -204,11 +235,4 @@ const Comment = ({ comment, onReply }) => {
                 onReply={onReply}
               />
             ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Comment;
+          </div> */
