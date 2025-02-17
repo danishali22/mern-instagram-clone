@@ -33,7 +33,7 @@ const Reply = ({ reply, commentId, onReply }) => {
         return (
           <span
             key={index}
-            className="text-blue-500 hover:underline"
+            className="text-blue-500 hover:underline cursor-pointer"
           >
             {part}
           </span>
