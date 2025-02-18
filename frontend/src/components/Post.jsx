@@ -65,6 +65,12 @@ const Post = ({ post }) => {
     inputText.trim() ? setText(inputText) : setText("");
   };
 
+  const totalCommentCount = comment.reduce(
+    (acc, curr) => acc + 1 + (curr.replies?.length || 0),
+    0
+  );
+
+
   const updatePostHandler = async () => {
     if (!editCaption.trim()) return toast.error("Caption cannot be empty!");
 
@@ -305,7 +311,12 @@ const Post = ({ post }) => {
           />
         )}
       </div>
-      <span className="font-medium mb-2 block">{postLikeCount} Like</span>
+      {postLikeCount > 0 && (
+        <span className="font-medium mb-2 block">
+          {postLikeCount} {postLikeCount === 1 ? "Like" : "Likes"}
+        </span>
+      )}
+
       {/* Edit Caption  */}
       <div className="flex justify-between items-center gap-2">
         <div>
@@ -333,7 +344,7 @@ const Post = ({ post }) => {
         </div>
       </div>
 
-      {comment.length !== 0 && (
+      {totalCommentCount !== 0 && (
         <span
           onClick={() => {
             dispatch(setSelectedPosts(post));
@@ -341,7 +352,7 @@ const Post = ({ post }) => {
           }}
           className="cursor-pointer text-gray-400 text-sm"
         >
-          View all {comment.length} comments
+          View all {totalCommentCount} comments
         </span>
       )}
 

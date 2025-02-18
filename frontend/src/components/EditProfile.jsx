@@ -100,7 +100,7 @@ const EditProfile = () => {
             <div>
               <h1 className="text-sm font-semibold"> {user?.username} </h1>
               <span className="text-gray-600">
-                {user?.bio || "Bio here..."}
+                {user?.bio || ""}
               </span>
             </div>
           </div>

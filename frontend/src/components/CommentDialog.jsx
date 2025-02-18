@@ -138,7 +138,7 @@ const CommentDialog = ({ open, setOpen }) => {
               </div>
             </div>
             <hr />
-            <div className="flex-1 overflow-y-auto max-h-96 p-4">
+            <div className="flex-1 overflow-y-auto max-h-96">
               {comments.map((comment) => (
                 <Comment
                   key={comment._id}
@@ -150,15 +150,22 @@ const CommentDialog = ({ open, setOpen }) => {
             <div className="p-4">
               {replyingTo && (
                 <div className="text-sm bg-gray-200 px-4 py-3 mb-1 flex items-center justify-between">
-                  <span className="text-gray-700">
-                    Replying to @
-                    {
-                      comments.find((c) => c._id === replyingTo)?.author
-                        .username
-                    }
-                  </span>
+                  <div>
+                    <span className="text-gray-700">Replying to</span>
+                    <span className="text-blue-500">
+                      {" "}
+                      @
+                      {
+                        comments.find((c) => c._id === replyingTo)?.author
+                          .username
+                      }
+                    </span>
+                  </div>
                   <button
-                    onClick={() => {setReplyingTo(null); setText("")}}
+                    onClick={() => {
+                      setReplyingTo(null);
+                      setText("");
+                    }}
                     className="text-gray-400 hover:text-gray-700"
                   >
                     <X className="w-4 h-4" />

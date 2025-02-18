@@ -9,7 +9,6 @@ import { axiosInstance } from "@/lib/utils";
 import { toast } from "sonner";
 import { setSelectedPosts } from "@/redux/postSlice";
 import { FaHeart } from "react-icons/fa";
-import { Link } from "react-router-dom";
 
 const Reply = ({ reply, commentId, onReply }) => {
   const dispatch = useDispatch();

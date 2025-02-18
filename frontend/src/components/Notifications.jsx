@@ -30,7 +30,7 @@ const Notifications = ({ open, setOpen }) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent
-        className="fixed top-0 left-0 bottom-0 w-[40%] bg-white p-6 rounded-lg shadow-lg overflow-y-auto transform transition-transform duration-300"
+        className="fixed top-0 left-0 bottom-0 w-[80%] md:w-[40%] bg-white p-6 rounded-lg shadow-lg overflow-y-auto transform transition-transform duration-300"
         style={{ transform: open ? "translateX(0)" : "translateX(-100%)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -63,7 +63,7 @@ const Notifications = ({ open, setOpen }) => {
               notifications.map((notification) => (
                 <div
                   key={notification.id}
-                  className={`flex items-center gap-4 justify-between my-2 p-3 border-b ${
+                  className={`flex items-center cursor-pointer gap-4 justify-between my-2 p-3 border-b ${
                     !notification.isRead ? "bg-blue-50" : "bg-white"
                   }`}
                   onClick={() => handleMarkAsRead(notification.id)}

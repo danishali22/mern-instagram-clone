@@ -202,8 +202,14 @@ const Comment = ({ comment, onReply }) => {
         </div>
         {comment.replies?.length > 0 && (
           <>
-            <span className="flex items-center justify-start text-xs gap-2 mt-1 text-gray-500 cursor-pointer" onClick={handleOpenReply}>
-              <Minus /> View replies ({comment.replies?.length})
+            <span
+              className="flex items-center justify-start text-xs gap-2 mt-1 text-gray-500 cursor-pointer"
+              onClick={handleOpenReply}
+            >
+              <Minus />
+              {openReply
+                ? "Hide Replies"
+                : "View replies" + " (" + comment.replies?.length + ")"}
             </span>
             {openReply && (
               <div className="ml-1 mt-2 border-l-2 pl-2">
